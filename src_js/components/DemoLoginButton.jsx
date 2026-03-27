@@ -9,7 +9,7 @@ const DemoLoginButton = ({ role }) => {
   const handleDemoLogin = async () => {
     setLoading(true);
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/demo-login', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/demo-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

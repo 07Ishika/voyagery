@@ -6,7 +6,7 @@ const BackendData = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("(import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/api/items")
+    fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/api/items`)
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();

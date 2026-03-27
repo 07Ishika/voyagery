@@ -5,7 +5,7 @@ const UserInfo = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("(import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/user", {
+    fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
       credentials: "include"
     })
       .then((res) => {

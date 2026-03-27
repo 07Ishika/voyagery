@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       // If no tab user, check server session
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/user', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
         credentials: 'include'
       });
       

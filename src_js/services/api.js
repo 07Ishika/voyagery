@@ -1,5 +1,5 @@
 // API service for Voyagery backend communication
-const API_BASE_URL = (import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/api';
+const API_BASE_URL = `${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/api`;
 
 class ApiService {
   // Generic fetch method with error handling
@@ -197,7 +197,7 @@ class ApiService {
   // ==================== AUTHENTICATION API ====================
   async getCurrentUser() {
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/user', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
         credentials: 'include'
       });
       
@@ -214,7 +214,7 @@ class ApiService {
 
   async getCurrentUser() {
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/user', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -235,7 +235,7 @@ class ApiService {
 
   async logout() {
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/logout', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/logout`, {
         method: 'GET',
         credentials: 'include'
       });

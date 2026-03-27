@@ -46,7 +46,7 @@ export const TabSessionProvider = ({ children }) => {
       }
 
       // If no tab-specific user, check server session
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/user', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
         credentials: 'include'
       });
       
@@ -80,7 +80,7 @@ export const TabSessionProvider = ({ children }) => {
 
   const loginAsUser = async (userId) => {
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/demo-login', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/demo-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

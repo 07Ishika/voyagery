@@ -303,7 +303,7 @@ const DashboardGuide = () => {
         status: 'scheduled'
       };
 
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/api/scheduled-calls', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/api/scheduled-calls`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

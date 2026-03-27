@@ -40,7 +40,7 @@ const RoleSelection = () => {
     // User is authenticated but needs to set role
     setSettingRole(true);
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/set-role', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/set-role`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ const UserSwitcher = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/demo-users', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/demo-users`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -30,7 +30,7 @@ const UserSwitcher = () => {
   const switchUser = async (userId) => {
     setSwitching(true);
     try {
-      const response = await fetch((import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000') + '/auth/demo-login', {
+      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/demo-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
