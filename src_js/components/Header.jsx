@@ -16,7 +16,12 @@ export const Header = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
+  const homePath = isGuide ? "/home/guide" : isMigrant ? "/home" : "/";
+  const navLinkClass = (path) =>
+    `transition-smooth ${location.pathname === path || (path !== "/" && location.pathname.startsWith(path + "/"))
+      ? "text-primary font-medium"
+      : "text-muted-foreground hover:text-primary"}`;
 
   // Initialize theme on mount
   useEffect(() => {
@@ -44,42 +49,52 @@ export const Header = () => {
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo → role home when logged in, cover page otherwise */}
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
                 <span className="text-white font-bold text-lg">V</span>
               </div>
-              <a 
-                href="/" 
+              <Link 
+                to={homePath} 
                 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hover:scale-105 transition-transform"
               >
                 Voyagery
-              </a>
+              </Link>
             </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {isGuide && (
-              <a href="/dashboard-guide" className="text-muted-foreground hover:text-primary transition-smooth">
-                Dashboard
-              </a>
+            {currentUser && (
+              <Link to={homePath} className={navLinkClass(homePath)}>
+                Home
+              </Link>
             )}
-            <a href={isGuide ? "/guide/community" : "/community"} className="text-muted-foreground hover:text-primary transition-smooth">
+            {isGuide && (
+              <Link to="/dashboard-guide" className={navLinkClass("/dashboard-guide")}>
+                Dashboard
+              </Link>
+            )}
+            {isMigrant && (
+              <Link to="/dashboard-migrant" className={navLinkClass("/dashboard-migrant")}>
+                Dashboard
+              </Link>
+            )}
+            <Link to={isGuide ? "/guide/community" : "/community"} className={navLinkClass(isGuide ? "/guide/community" : "/community")}>
               Community
-            </a>
+            </Link>
             {isGuide ? (
-              <a href="/migrant-requests" className="text-muted-foreground hover:text-primary transition-smooth">
+              <Link to="/migrant-requests" className="text-muted-foreground hover:text-primary transition-smooth">
                 Find Migrants
-              </a>
+              </Link>
             ) : (
-              <a href="/guides" className="text-muted-foreground hover:text-primary transition-smooth">
+              <Link to="/guides" className="text-muted-foreground hover:text-primary transition-smooth">
                 Find Guides
-              </a>
+              </Link>
             )}
             {!isGuide && (
-              <a href="/cost-of-living" className="text-muted-foreground hover:text-primary transition-smooth">
+              <Link to="/cost-of-living" className="text-muted-foreground hover:text-primary transition-smooth">
                 Costlytic
-              </a>
+              </Link>
             )}
           </nav>
 
@@ -154,27 +169,37 @@ export const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 animate-slide-up">
             <nav className="flex flex-col space-y-4">
-              {isGuide && (
-                <a href="/dashboard-guide" className="text-muted-foreground hover:text-primary transition-smooth py-2">
-                  Dashboard
-                </a>
+              {currentUser && (
+                <Link to={homePath} className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  Home
+                </Link>
               )}
-              <a href={isGuide ? "/guide/community" : "/community"} className="text-muted-foreground hover:text-primary transition-smooth py-2">
+              {isGuide && (
+                <Link to="/dashboard-guide" className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  Dashboard
+                </Link>
+              )}
+              {isMigrant && (
+                <Link to="/dashboard-migrant" className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  Dashboard
+                </Link>
+              )}
+              <Link to={isGuide ? "/guide/community" : "/community"} className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
                 Community
-              </a>
+              </Link>
               {isGuide ? (
-                <a href="/migrant-requests" className="text-muted-foreground hover:text-primary transition-smooth py-2">
+                <Link to="/migrant-requests" className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
                   Find Migrants
-                </a>
+                </Link>
               ) : (
-                <a href="/guides" className="text-muted-foreground hover:text-primary transition-smooth py-2">
+                <Link to="/guides" className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
                   Find Guides
-                </a>
+                </Link>
               )}
               {!isGuide && (
-                <a href="/cost-of-living" className="text-muted-foreground hover:text-primary transition-smooth py-2">
+                <Link to="/cost-of-living" className="text-muted-foreground hover:text-primary transition-smooth py-2" onClick={() => setIsMobileMenuOpen(false)}>
                   Costlytic
-                </a>
+                </Link>
               )}
               <div className="pt-4 space-y-3">
                 {currentUser ? (

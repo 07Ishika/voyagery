@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const DemoLoginButton = ({ role }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const { toast } = useToast();
 
   const handleDemoLogin = async () => {
     setLoading(true);
@@ -18,21 +22,34 @@ const DemoLoginButton = ({ role }) => {
         body: JSON.stringify({ role }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
-        const user = await response.json();
-        console.log('Demo login successful:', user);
-        
-        // Redirect based on role
+        setUser(data);
+        toast({
+          title: "Demo login successful",
+          description: `Welcome ${data.displayName} (${data.role})`,
+        });
+
         if (role === 'guide') {
-          navigate('/dashboard-guide');
+          navigate('/home/guide', { replace: true });
         } else {
-          navigate('/guides');
+          navigate('/home', { replace: true });
         }
       } else {
-        console.error('Demo login failed');
+        toast({
+          title: "Demo login failed",
+          description: data.error || "Could not log in. Make sure the server is running and test users exist.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Demo login error:', error);
+      toast({
+        title: "Demo login error",
+        description: "Failed to connect to server",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -51,4 +68,3 @@ const DemoLoginButton = ({ role }) => {
 };
 
 export default DemoLoginButton;
-

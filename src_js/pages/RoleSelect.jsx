@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Users, Globe2 } from "lucide-react";
+import { Users, Globe2, ArrowLeft } from "lucide-react";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import DemoLoginButton from "../components/DemoLoginButton";
 import ThemeToggle from "../components/ThemeToggle";
@@ -106,7 +106,16 @@ const RoleSelection = () => {
       <div className="pointer-events-none absolute top-1/2 left-8 -translate-y-1/2 w-[22rem] h-[22rem] rounded-full bg-[#c4b5fd]/30 blur-2xl dark:hidden"></div>
       <div className="pointer-events-none absolute -top-10 right-1/4 w-[34rem] h-[34rem] rounded-full bg-[#93c5fd]/20 blur-2xl dark:hidden"></div>
 
-      {/* Top-right controls (glassmorphism) */}
+      {/* Top controls — back to cover + theme */}
+      <div className="absolute left-4 top-4 sm:left-6 sm:top-6 z-20">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Voyagery
+        </Link>
+      </div>
       <div className="absolute right-4 top-4 sm:right-6 sm:top-6 z-20">
         <ThemeToggle />
       </div>

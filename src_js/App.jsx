@@ -1,5 +1,4 @@
 import { Toaster } from "@/components/ui/toaster";
-import BackendData from "./components/BackendData";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -20,33 +19,30 @@ import MigrantRequests from "./pages/MigrantRequests";
 import Profile from "./pages/Profile";
 import CallRequest from "./pages/CallRequest";
 import CostOfLiving from "./pages/CostOfLiving";
-import ApiTest from "./components/ApiTest";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 import ManualLogin from "./pages/ManualLogin";
 import DashboardGuide from "./pages/DashboardGuide";
+import DashboardMigrant from "./pages/DashboardMigrant";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-
 
 const queryClient = new QueryClient();
 
 const AppShell = () => {
   const location = useLocation();
-  const hiddenHeaderPaths = new Set(["/", "/role", "/login/migrant", "/login/guide", "/manual-login"]);
+  const hiddenHeaderPaths = new Set(["/", "/role", "/manual-login"]);
   const isCover = hiddenHeaderPaths.has(location.pathname);
-  const showCalculatorButton = !isCover; // Show calculator button on all pages except cover and role selection
-  
+  const showCalculatorButton = !isCover;
+
   return (
     <div className="min-h-screen bg-background">
       {!isCover && <Header />}
-      {/* User info removed to prevent "Not logged in" message */}
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Cover />} />
           <Route path="/role" element={<RoleSelection />} />
           <Route path="/manual-login" element={<ManualLogin />} />
-          
+
           {/* Guide-only routes */}
           <Route path="/home/guide" element={
             <ProtectedRoute requireRole="guide">
@@ -73,7 +69,7 @@ const AppShell = () => {
               <Community />
             </ProtectedRoute>
           } />
-          
+
           {/* Migrant-only routes */}
           <Route path="/guides" element={
             <ProtectedRoute requireRole="migrant">
@@ -95,8 +91,13 @@ const AppShell = () => {
               <CallRequest />
             </ProtectedRoute>
           } />
-          
-          {/* Shared authenticated routes - /home redirects based on role */}
+          <Route path="/dashboard-migrant" element={
+            <ProtectedRoute requireRole="migrant">
+              <DashboardMigrant />
+            </ProtectedRoute>
+          } />
+
+          {/* Shared authenticated routes */}
           <Route path="/home" element={
             <ProtectedRoute>
               <Index />
@@ -107,21 +108,13 @@ const AppShell = () => {
               <Community />
             </ProtectedRoute>
           } />
-          
-          {/* API Test routes */}
-          <Route path="/api-test" element={<ApiTest />} />
-          <Route path="/backend-demo" element={<BackendData />} />
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>
-      
-      {/* Global Calculator Components */}
+
       {showCalculatorButton && <FloatingCalculatorButton />}
       <CostCalculatorWidget />
-      
-
     </div>
   );
 };

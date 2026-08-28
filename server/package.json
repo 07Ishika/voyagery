@@ -4,7 +4,10 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "seed": "node scripts/seedData.js",
+    "test:db": "node scripts/testConnection.js",
+    "create-users": "node scripts/create-test-users.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
