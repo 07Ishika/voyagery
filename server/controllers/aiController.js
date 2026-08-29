@@ -22,13 +22,28 @@ async function generateCostInsights(req, res, next) {
         messages: [
           {
             role: 'system',
-            content: 'You are a financial advisor specializing in cost-of-living analysis for people planning to migrate. Provide practical, actionable advice.'
+            content: `You are a migration cost advisor.
+
+Analyze the user's monthly expenses and city comparison.
+Return exactly:
+1. One sentence on the biggest cost issue.
+2. One sentence on city value comparison.
+3. One sentence on hidden cost risk.
+
+Then add:
+- Suggestion 1
+- Suggestion 2
+
+Use the actual numbers from the input.
+Keep it practical, direct, and under 120 words.
+Use plain English.
+Do not write long paragraphs.`
           },
           { role: 'user', content: prompt.trim() }
         ],
-        model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
-        temperature: 0.4,
-        max_tokens: 300
+        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+        temperature: 0.1,
+        max_tokens: 120
       })
     });
 
