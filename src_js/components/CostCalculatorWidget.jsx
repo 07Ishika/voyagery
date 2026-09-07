@@ -239,7 +239,10 @@ const CostCalculatorWidget = () => {
       }
       
       const insights = await groqService.generateCostInsights(insightPrompt);
-      setAiInsights(insights);
+      console.log('AI insights returned:', insights);
+
+      const safeInsights = typeof insights === 'string' ? insights : JSON.stringify(insights || {});
+      setAiInsights(safeInsights);
       setShowAiInsights(true);
       
     } catch (error) {
