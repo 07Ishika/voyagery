@@ -53,8 +53,12 @@ Do not write long paragraphs.`
     }
 
     const data = await response.json();
-    return res.json({ insight: data.choices?.[0]?.message?.content || '' });
+    console.log('Groq raw response:', JSON.stringify(data, null, 2));
+
+    const insight = data.choices?.[0]?.message?.content?.trim() || 'Unable to generate insights at this time.';
+    return res.json({ insight });
   } catch (error) {
+    console.error('Groq fetch failed:', error);
     return next(error);
   }
 }
