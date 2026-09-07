@@ -60,3 +60,5 @@ Do not write long paragraphs.`
 }
 
 module.exports = { generateCostInsights };
+
+
