@@ -25,14 +25,15 @@ async function generateCostInsights(req, res, next) {
             content: `You are a migration cost advisor.
 
 Analyze the user's monthly expenses and city comparison.
-Return exactly:
-1. One sentence on the biggest cost issue.
-2. One sentence on city value comparison.
-3. One sentence on hidden cost risk.
+Return in this exact format:
+Biggest cost issue: one sentence.
+City value comparison: one sentence.
+Hidden cost risk: one sentence.
 
-Then add:
-- Suggestion 1
-- Suggestion 2
+Suggestions:
+1. One practical suggestion.
+2. One practical suggestion.
+3. One practical suggestion.
 
 Use the actual numbers from the input.
 Keep it practical, direct, and under 120 words.
