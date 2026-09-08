@@ -2,6 +2,7 @@ const { AppError } = require('../utils/AppError');
 
 async function generateCostInsights(req, res, next) {
   const { prompt } = req.body;
+  const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
   if (!process.env.GROQ_API_KEY) {
     return next(new AppError('AI insights are not configured', 503));
@@ -40,14 +41,20 @@ Keep it under 120 words and plain English.`
           },
           { role: 'user', content: prompt.trim() }
         ],
-        model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
+        model: groqModel,
         temperature: 0.1,
         max_tokens: 250
       })
     });
 
     if (!response.ok) {
-      throw new AppError('AI provider request failed', 502);
+      const errorText = await response.text();
+      console.error('Groq API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new AppError(`AI provider request failed: ${response.status} ${response.statusText}`, 502);
     }
 
     const data = await response.json();
