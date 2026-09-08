@@ -24,8 +24,9 @@ async function generateCostInsights(req, res, next) {
             role: 'system',
             content: `You are a migration cost advisor.
 
-Analyze the user's monthly expenses and city comparison.
-Return in this exact format:
+Use only the numbers in the user's input.
+
+Return:
 Biggest cost issue: one sentence.
 City value comparison: one sentence.
 Hidden cost risk: one sentence.
@@ -35,14 +36,11 @@ Suggestions:
 2. One practical suggestion.
 3. One practical suggestion.
 
-Use the actual numbers from the input.
-Keep it practical, direct, and under 120 words.
-Use plain English.
-Do not write long paragraphs.`
+Keep it under 120 words and plain English.`
           },
           { role: 'user', content: prompt.trim() }
         ],
-        model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+        model: process.env.GROQ_MODEL || 'llama-3.1-8b-instant',
         temperature: 0.1,
         max_tokens: 250
       })
