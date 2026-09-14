@@ -2,7 +2,7 @@ const { AppError } = require('../utils/AppError');
 
 async function generateCostInsights(req, res, next) {
   const { prompt } = req.body;
-  const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+  const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
   if (!process.env.GROQ_API_KEY) {
     return next(new AppError('AI insights are not configured', 503));
@@ -13,6 +13,7 @@ async function generateCostInsights(req, res, next) {
   }
 
   try {
+    const isReasoningModel = groqModel.startsWith('openai/gpt-oss');
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -43,7 +44,8 @@ Keep it under 120 words and plain English.`
         ],
         model: groqModel,
         temperature: 0.1,
-        max_tokens: 250
+        max_completion_tokens: 600,
+        ...(isReasoningModel ? { reasoning_effort: 'low' } : {})
       })
     });
 
@@ -60,7 +62,12 @@ Keep it under 120 words and plain English.`
     const data = await response.json();
     console.log('Groq raw response:', JSON.stringify(data, null, 2));
 
-    const insight = data.choices?.[0]?.message?.content?.trim() || 'Unable to generate insights at this time.';
+    const insight = data.choices?.[0]?.message?.content?.trim();
+
+    if (!insight) {
+      throw new AppError('AI provider returned an empty response', 502);
+    }
+
     return res.json({ insight });
   } catch (error) {
     console.error('Groq fetch failed:', error);
