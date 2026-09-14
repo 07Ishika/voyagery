@@ -28,6 +28,33 @@ import currencyService from '../services/currencyService';
 import costOfLivingService from '../services/costOfLivingService';
 import groqService from '../services/groqService';
 
+const parseInsightSections = (insight) => {
+  const sections = [];
+  let currentSection = null;
+
+  insight.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
+    const headingMatch = line.match(/^\*{0,2}([^:*]+):\*{0,2}\s*(.*)$/);
+    const suggestionMatch = line.match(/^\d+[.)]\s+(.+)$/);
+
+    if (headingMatch) {
+      currentSection = {
+        title: headingMatch[1].trim(),
+        text: headingMatch[2].trim(),
+        items: []
+      };
+      sections.push(currentSection);
+    } else if (suggestionMatch && currentSection) {
+      currentSection.items.push(suggestionMatch[1].trim());
+    } else if (currentSection) {
+      currentSection.text = `${currentSection.text} ${line}`.trim();
+    } else {
+      sections.push({ title: '', text: line, items: [] });
+    }
+  });
+
+  return sections;
+};
+
 const CostCalculatorWidget = () => {
   const { isCalculatorOpen, closeCalculator } = useCalculator();
   const [expenses, setExpenses] = useState({
@@ -622,8 +649,33 @@ const CostCalculatorWidget = () => {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="text-sm text-purple-600 dark:text-purple-400 leading-relaxed whitespace-pre-wrap bg-white/50 dark:bg-gray-800/50 p-3 rounded border">
-                    {aiInsights}
+                  <div className="space-y-2">
+                    {parseInsightSections(aiInsights).map((section, index) => (
+                      <div
+                        key={`${section.title}-${index}`}
+                        className="rounded-md border border-purple-100 dark:border-purple-800/70 bg-white/60 dark:bg-gray-800/60 p-3"
+                      >
+                        {section.title && (
+                          <div className="text-xs font-bold uppercase tracking-wide text-purple-700 dark:text-purple-300 mb-1">
+                            {section.title}
+                          </div>
+                        )}
+                        {section.text && (
+                          <p className="text-sm text-purple-950 dark:text-purple-100 leading-relaxed">
+                            {section.text}
+                          </p>
+                        )}
+                        {section.items.length > 0 && (
+                          <ol className="mt-2 space-y-2 list-decimal list-inside text-sm text-purple-950 dark:text-purple-100">
+                            {section.items.map((item, itemIndex) => (
+                              <li key={`${item}-${itemIndex}`} className="leading-relaxed pl-1">
+                                {item}
+                              </li>
+                            ))}
+                          </ol>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

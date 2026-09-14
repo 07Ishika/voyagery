@@ -29,16 +29,16 @@ async function generateCostInsights(req, res, next) {
 Use only the numbers in the user's input.
 
 Return:
-Biggest cost issue: one sentence.
-City value comparison: one sentence.
-Hidden cost risk: one sentence.
+Biggest cost issue: explain the largest difference and why it matters.
+City value comparison: explain which city offers better value and the main reason.
+Hidden cost risk: explain one realistic extra cost and its likely impact.
 
 Suggestions:
-1. One practical suggestion.
-2. One practical suggestion.
-3. One practical suggestion.
+1. One practical, specific suggestion with a short reason.
+2. One practical, specific suggestion with a short reason.
+3. One practical, specific suggestion with a short reason.
 
-Keep it under 120 words and plain English.`
+Keep it under 180 words, use plain English, and do not repeat the input numbers unnecessarily.`
           },
           { role: 'user', content: prompt.trim() }
         ],
