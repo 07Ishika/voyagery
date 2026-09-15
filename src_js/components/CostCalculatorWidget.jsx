@@ -59,7 +59,7 @@ const parseInsightSections = (insight) => {
     }
   });
 
-  return sections;
+  return sections.filter(section => section.title || section.text || section.items.length > 0);
 };
 
 const getInsightStyle = (title) => {
@@ -107,16 +107,16 @@ const getInsightStyle = (title) => {
 const CostCalculatorWidget = () => {
   const { isCalculatorOpen, closeCalculator } = useCalculator();
   const [expenses, setExpenses] = useState({
-    rent: 0,
-    groceries: 0,
-    transport: 0,
-    utilities: 0,
-    entertainment: 0,
-    healthcare: 0,
-    education: 0,
-    clothing: 0,
-    fitness: 0,
-    other: 0
+    rent: '',
+    groceries: '',
+    transport: '',
+    utilities: '',
+    entertainment: '',
+    healthcare: '',
+    education: '',
+    clothing: '',
+    fitness: '',
+    other: ''
   });
 
   const [baseCurrency, setBaseCurrency] = useState('USD'); // Currency for input
@@ -136,16 +136,16 @@ const CostCalculatorWidget = () => {
   const locations = costOfLivingService.getSupportedLocations();
 
   const expenseCategories = [
-    { key: 'rent', label: 'Rent/Mortgage', icon: Home, color: 'text-blue-500' },
-    { key: 'groceries', label: 'Groceries', icon: Utensils, color: 'text-green-500' },
-    { key: 'transport', label: 'Transportation', icon: Car, color: 'text-purple-500' },
-    { key: 'utilities', label: 'Utilities', icon: Zap, color: 'text-yellow-500' },
-    { key: 'entertainment', label: 'Entertainment', icon: Gamepad2, color: 'text-pink-500' },
-    { key: 'healthcare', label: 'Healthcare', icon: Heart, color: 'text-red-500' },
-    { key: 'education', label: 'Education', icon: Book, color: 'text-indigo-500' },
-    { key: 'clothing', label: 'Clothing', icon: Shirt, color: 'text-orange-500' },
-    { key: 'fitness', label: 'Fitness', icon: Dumbbell, color: 'text-teal-500' },
-    { key: 'other', label: 'Other', icon: ShoppingCart, color: 'text-gray-500' }
+    { key: 'rent', label: 'Rent/Mortgage', placeholder: 'e.g. 1200', icon: Home, color: 'text-blue-500' },
+    { key: 'groceries', label: 'Groceries', placeholder: 'e.g. 350', icon: Utensils, color: 'text-green-500' },
+    { key: 'transport', label: 'Transportation', placeholder: 'e.g. 120', icon: Car, color: 'text-purple-500' },
+    { key: 'utilities', label: 'Utilities', placeholder: 'e.g. 180', icon: Zap, color: 'text-yellow-500' },
+    { key: 'entertainment', label: 'Entertainment', placeholder: 'e.g. 100', icon: Gamepad2, color: 'text-pink-500' },
+    { key: 'healthcare', label: 'Healthcare', placeholder: 'e.g. 80', icon: Heart, color: 'text-red-500' },
+    { key: 'education', label: 'Education', placeholder: 'e.g. 100', icon: Book, color: 'text-indigo-500' },
+    { key: 'clothing', label: 'Clothing', placeholder: 'e.g. 60', icon: Shirt, color: 'text-orange-500' },
+    { key: 'fitness', label: 'Fitness', placeholder: 'e.g. 40', icon: Dumbbell, color: 'text-teal-500' },
+    { key: 'other', label: 'Other', placeholder: 'e.g. 100', icon: ShoppingCart, color: 'text-gray-500' }
   ];
 
   const totalExpenses = Object.values(expenses).reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
@@ -158,9 +158,13 @@ const CostCalculatorWidget = () => {
     : totalExpenses;
 
   const handleExpenseChange = (key, value) => {
-    // Prevent negative values and ensure valid number
-    const numericValue = parseFloat(value) || 0;
-    const validValue = Math.max(0, numericValue); // Ensure non-negative
+    if (value === '') {
+      setExpenses(prev => ({ ...prev, [key]: '' }));
+      return;
+    }
+
+    const numericValue = parseFloat(value);
+    const validValue = Number.isFinite(numericValue) ? Math.max(0, numericValue) : '';
     
     setExpenses(prev => ({
       ...prev,
@@ -170,16 +174,16 @@ const CostCalculatorWidget = () => {
 
   const resetCalculator = () => {
     setExpenses({
-      rent: 0,
-      groceries: 0,
-      transport: 0,
-      utilities: 0,
-      entertainment: 0,
-      healthcare: 0,
-      education: 0,
-      clothing: 0,
-      fitness: 0,
-      other: 0
+      rent: '',
+      groceries: '',
+      transport: '',
+      utilities: '',
+      entertainment: '',
+      healthcare: '',
+      education: '',
+      clothing: '',
+      fitness: '',
+      other: ''
     });
   };
 
@@ -602,7 +606,7 @@ const CostCalculatorWidget = () => {
                 </div>
               </div>
               
-              {expenseCategories.map(({ key, label, icon: Icon, color }) => (
+              {expenseCategories.map(({ key, label, placeholder, icon: Icon, color }) => (
                 <div key={key} className="p-3 bg-muted/30 rounded-lg border border-muted">
                   <div className="flex items-center gap-3 mb-2">
                     <Icon className={`h-5 w-5 ${color}`} />
@@ -615,13 +619,14 @@ const CostCalculatorWidget = () => {
                       step="0.01"
                       value={expenses[key]}
                       onChange={(e) => handleExpenseChange(key, e.target.value)}
+                      onWheel={(e) => e.currentTarget.blur()}
                       onKeyDown={(e) => {
                         // Prevent minus key
                         if (e.key === '-' || e.key === 'e' || e.key === 'E') {
                           e.preventDefault();
                         }
                       }}
-                      placeholder="0"
+                      placeholder={placeholder}
                       className="w-full text-base"
                     />
                     {showConversion && baseCurrency !== displayCurrency && expenses[key] > 0 && (
