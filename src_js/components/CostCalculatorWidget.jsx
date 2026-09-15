@@ -35,6 +35,7 @@ import groqService from '../services/groqService';
 const parseInsightSections = (insight) => {
   const sections = [];
   let currentSection = null;
+  const sectionTitles = /^(biggest cost issue|city value comparison|hidden cost risk|suggestions?|money-saving tips?|budget adjustment recommendations?|key takeaway)$/i;
 
   insight.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
     const boldHeadingMatch = line.match(/^\*{2}(.+?)\*{2}\s*:?[ \t]*(.*)$/);
@@ -42,7 +43,10 @@ const parseInsightSections = (insight) => {
     const suggestionMatch = line.match(/^\d+[.)]\s+(.+)$/);
     const bulletMatch = line.match(/^[-*]\s+(.+)$/);
 
-    if (boldHeadingMatch || headingMatch) {
+    const boldTitle = boldHeadingMatch?.[1].replace(/\*+/g, '').trim() || '';
+    const isKnownBoldHeading = boldHeadingMatch && sectionTitles.test(boldTitle);
+
+    if (headingMatch || isKnownBoldHeading) {
       const match = boldHeadingMatch || headingMatch;
       currentSection = {
         title: match[1].replace(/\*+/g, '').trim(),
@@ -53,7 +57,7 @@ const parseInsightSections = (insight) => {
     } else if ((suggestionMatch || bulletMatch) && currentSection) {
       currentSection.items.push((suggestionMatch || bulletMatch)[1].replace(/\*+/g, '').trim());
     } else if (currentSection) {
-      currentSection.text = `${currentSection.text} ${line.replace(/\*+/g, '')}`.trim();
+      currentSection.text = `${currentSection.text} ${line.replace(/^\*+|\*+$/g, '')}`.trim();
     } else {
       sections.push({ title: '', text: line.replace(/\*+/g, ''), items: [] });
     }
@@ -259,35 +263,45 @@ const CostCalculatorWidget = () => {
         const city2Data = costOfLivingService.getCityData(country2, city2);
         
         if (city1Data && city2Data) {
+          const exchangeRates = currencyService.exchangeRates || currencyService.fallbackRates;
+          const city1USD = costOfLivingService.convertCostsToUSD(city1Data, exchangeRates);
+          const city2USD = costOfLivingService.convertCostsToUSD(city2Data, exchangeRates);
+          const city1MonthlyCost = costOfLivingService.calculateBasicLivingCost(city1USD);
+          const city2MonthlyCost = costOfLivingService.calculateBasicLivingCost(city2USD);
+          const enteredBudgetUSD = currencyService.convert(totalExpenses, baseCurrency, 'USD');
+
           insightPrompt = `
           Analyze this cost of living comparison for migration planning:
-          
-          Current City: ${city1Data.name}, ${city1Data.country}
-          - Rent (1BR): ${city1Data.currency} ${city1Data.rent.oneBedroom}
-          - Groceries: ${city1Data.currency} ${city1Data.food.groceries}
-          - Transport: ${city1Data.currency} ${city1Data.transport.public}
-          - Utilities: ${city1Data.currency} ${city1Data.utilities.electricity + city1Data.utilities.water + city1Data.utilities.internet}
-          
-          Target City: ${city2Data.name}, ${city2Data.country}
-          - Rent (1BR): ${city2Data.currency} ${city2Data.rent.oneBedroom}
-          - Groceries: ${city2Data.currency} ${city2Data.food.groceries}
-          - Transport: ${city2Data.currency} ${city2Data.transport.public}
-          - Utilities: ${city2Data.currency} ${city2Data.utilities.electricity + city2Data.utilities.water + city2Data.utilities.internet}
-          
-          User's Current Expenses:
-          - Rent: ${expenses.rent}
-          - Groceries: ${expenses.groceries}
-          - Transport: ${expenses.transport}
-          - Utilities: ${expenses.utilities}
-          
-          Provide practical migration insights:
-          1. Which city offers better value for money?
-          2. What are the 3 biggest cost differences?
-          3. Specific money-saving tips for the target city
-          4. Hidden costs to watch out for
-          5. Budget adjustment recommendations
-          
-          Keep it practical and actionable. Max 200 words.
+          All amounts below are monthly USD equivalents. Do not compare INR, GBP, or other raw local amounts.
+
+          Current city: ${city1Data.name}, ${city1Data.country}
+          - Typical basic monthly total: USD ${city1MonthlyCost}
+          - Rent: USD ${city1USD.rent.oneBedroom}
+          - Groceries: USD ${city1USD.food.groceries}
+          - Transport: USD ${city1USD.transport.public}
+          - Utilities: USD ${city1USD.utilities.electricity + city1USD.utilities.water + city1USD.utilities.internet}
+
+          Target city: ${city2Data.name}, ${city2Data.country}
+          - Typical basic monthly total: USD ${city2MonthlyCost}
+          - Rent: USD ${city2USD.rent.oneBedroom}
+          - Groceries: USD ${city2USD.food.groceries}
+          - Transport: USD ${city2USD.transport.public}
+          - Utilities: USD ${city2USD.utilities.electricity + city2USD.utilities.water + city2USD.utilities.internet}
+
+          User-entered budget: USD ${enteredBudgetUSD.toFixed(2)} total per month.
+          This is the user's own total budget, not the rent amount. Explain clearly whether it is enough for the target city's typical monthly total.
+
+          Return these sections exactly:
+          Biggest cost issue: explain the largest USD difference and its impact.
+          City value comparison: compare the two typical USD totals.
+          Hidden cost risk: explain one realistic extra cost.
+          Money-saving tips:
+          1. One practical suggestion with a reason.
+          2. One practical suggestion with a reason.
+          3. One practical suggestion with a reason.
+          Budget adjustment recommendations: explain how the user's USD ${enteredBudgetUSD.toFixed(2)} budget should change.
+
+          Use plain English and keep it under 180 words.
           `;
         }
       } else {
