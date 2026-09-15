@@ -35,31 +35,29 @@ import groqService from '../services/groqService';
 const parseInsightSections = (insight) => {
   const sections = [];
   let currentSection = null;
-  const sectionTitles = /^(biggest cost issue|city value comparison|hidden cost risk|suggestions?|money-saving tips?|budget adjustment recommendations?|key takeaway)$/i;
+  const sectionTitles = /^(biggest cost issue|city value comparison|hidden cost risk|suggestions?|money-saving tips?|budget adjustment recommendations?)$/i;
 
   insight.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
-    const boldHeadingMatch = line.match(/^\*{2}(.+?)\*{2}\s*:?[ \t]*(.*)$/);
-    const headingMatch = line.match(/^([^:*]+):\s*(.*)$/);
-    const suggestionMatch = line.match(/^\d+[.)]\s+(.+)$/);
-    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
+    const cleanLine = line.replace(/\*+/g, '').trim();
+    const headingMatch = cleanLine.match(/^([^:]+):\s*(.*)$/);
+    const headingTitle = headingMatch?.[1].replace(/\*+/g, '').trim() || cleanLine.replace(/:$/, '').trim();
+    const isKnownHeading = sectionTitles.test(headingTitle);
+    const suggestionMatch = cleanLine.match(/^\d+[.)]\s+(.+)$/);
+    const bulletMatch = cleanLine.match(/^[-*]\s+(.+)$/);
 
-    const boldTitle = boldHeadingMatch?.[1].replace(/\*+/g, '').replace(/:$/, '').trim() || '';
-    const isKnownBoldHeading = boldHeadingMatch && sectionTitles.test(boldTitle);
-
-    if (headingMatch || isKnownBoldHeading) {
-      const match = boldHeadingMatch || headingMatch;
+    if (isKnownHeading) {
       currentSection = {
-        title: match[1].replace(/\*+/g, '').replace(/:$/, '').trim(),
-        text: match[2].replace(/\*+/g, '').trim(),
+        title: headingTitle,
+        text: headingMatch?.[2]?.trim() || '',
         items: []
       };
       sections.push(currentSection);
     } else if ((suggestionMatch || bulletMatch) && currentSection) {
       currentSection.items.push((suggestionMatch || bulletMatch)[1].replace(/\*+/g, '').trim());
     } else if (currentSection) {
-      currentSection.text = `${currentSection.text} ${line.replace(/^\*+|\*+$/g, '')}`.trim();
+      currentSection.text = `${currentSection.text} ${cleanLine}`.trim();
     } else if (!currentSection) {
-      sections.push({ title: '', text: line.replace(/\*+/g, ''), items: [] });
+      sections.push({ title: 'Summary', text: cleanLine, items: [] });
     }
   });
 
@@ -769,7 +767,7 @@ const CostCalculatorWidget = () => {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
                     {parseInsightSections(aiInsights).map((section, index) => {
                       const { icon: InsightIcon, iconClass, backgroundClass } = getInsightStyle(section.title);
                       const isListSection = section.items.length > 0;
@@ -777,17 +775,17 @@ const CostCalculatorWidget = () => {
                       return (
                       <div
                         key={`${section.title}-${index}`}
-                        className={`rounded-lg border p-3 ${isListSection ? 'sm:col-span-2' : ''} ${backgroundClass}`}
+                        className={`rounded-lg border p-3 ${backgroundClass}`}
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <InsightIcon className={`h-4 w-4 ${iconClass}`} />
                           <div className="text-xs font-bold uppercase tracking-wide text-foreground/80">
-                            {section.title || 'Key takeaway'}
+                            {section.title}
                           </div>
                         </div>
                         {section.text && <p className="text-sm text-foreground/80 leading-relaxed">{section.text}</p>}
                         {isListSection && (
-                          <ol className="mt-3 grid gap-2 sm:grid-cols-2">
+                          <ol className="mt-3 space-y-2">
                             {section.items.map((item, itemIndex) => (
                               <li key={`${item}-${itemIndex}`} className="flex gap-2 text-sm text-foreground/80 leading-relaxed">
                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-background/70 text-xs font-semibold text-foreground/70">
