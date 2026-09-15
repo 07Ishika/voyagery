@@ -21,7 +21,11 @@ import {
   RefreshCw,
   ArrowRightLeft,
   Brain,
-  Sparkles
+  Sparkles,
+  AlertTriangle,
+  MapPin,
+  Lightbulb,
+  WalletCards
 } from 'lucide-react';
 import { useCalculator } from '../contexts/CalculatorContext';
 import currencyService from '../services/currencyService';
@@ -33,26 +37,71 @@ const parseInsightSections = (insight) => {
   let currentSection = null;
 
   insight.split(/\r?\n/).map(line => line.trim()).filter(Boolean).forEach(line => {
-    const headingMatch = line.match(/^\*{0,2}([^:*]+):\*{0,2}\s*(.*)$/);
+    const boldHeadingMatch = line.match(/^\*{2}(.+?)\*{2}\s*:?[ \t]*(.*)$/);
+    const headingMatch = line.match(/^([^:*]+):\s*(.*)$/);
     const suggestionMatch = line.match(/^\d+[.)]\s+(.+)$/);
+    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
 
-    if (headingMatch) {
+    if (boldHeadingMatch || headingMatch) {
+      const match = boldHeadingMatch || headingMatch;
       currentSection = {
-        title: headingMatch[1].trim(),
-        text: headingMatch[2].trim(),
+        title: match[1].replace(/\*+/g, '').trim(),
+        text: match[2].replace(/\*+/g, '').trim(),
         items: []
       };
       sections.push(currentSection);
-    } else if (suggestionMatch && currentSection) {
-      currentSection.items.push(suggestionMatch[1].trim());
+    } else if ((suggestionMatch || bulletMatch) && currentSection) {
+      currentSection.items.push((suggestionMatch || bulletMatch)[1].replace(/\*+/g, '').trim());
     } else if (currentSection) {
-      currentSection.text = `${currentSection.text} ${line}`.trim();
+      currentSection.text = `${currentSection.text} ${line.replace(/\*+/g, '')}`.trim();
     } else {
-      sections.push({ title: '', text: line, items: [] });
+      sections.push({ title: '', text: line.replace(/\*+/g, ''), items: [] });
     }
   });
 
   return sections;
+};
+
+const getInsightStyle = (title) => {
+  const normalizedTitle = title.toLowerCase();
+
+  if (normalizedTitle.includes('hidden') || normalizedTitle.includes('risk')) {
+    return {
+      icon: AlertTriangle,
+      iconClass: 'text-amber-500',
+      backgroundClass: 'bg-amber-500/10 border-amber-500/20'
+    };
+  }
+
+  if (normalizedTitle.includes('city') || normalizedTitle.includes('value')) {
+    return {
+      icon: MapPin,
+      iconClass: 'text-cyan-500',
+      backgroundClass: 'bg-cyan-500/10 border-cyan-500/20'
+    };
+  }
+
+  if (normalizedTitle.includes('suggest') || normalizedTitle.includes('tip')) {
+    return {
+      icon: Lightbulb,
+      iconClass: 'text-yellow-500',
+      backgroundClass: 'bg-yellow-500/10 border-yellow-500/20'
+    };
+  }
+
+  if (normalizedTitle.includes('budget') || normalizedTitle.includes('cost')) {
+    return {
+      icon: WalletCards,
+      iconClass: 'text-rose-500',
+      backgroundClass: 'bg-rose-500/10 border-rose-500/20'
+    };
+  }
+
+  return {
+    icon: Sparkles,
+    iconClass: 'text-violet-500',
+    backgroundClass: 'bg-violet-500/10 border-violet-500/20'
+  };
 };
 
 const CostCalculatorWidget = () => {
@@ -636,10 +685,15 @@ const CostCalculatorWidget = () => {
               
               {/* AI Insights Section */}
               {showAiInsights && (
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700 mb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Brain className="h-5 w-5 text-purple-600" />
-                    <span className="text-base font-medium text-purple-700 dark:text-purple-300">AI Cost Insights</span>
+                <div className="relative overflow-hidden rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-background to-cyan-500/10 p-4 mb-4 shadow-sm">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/15">
+                      <Brain className="h-5 w-5 text-violet-500" />
+                    </div>
+                    <div>
+                      <div className="text-base font-semibold tracking-tight">AI Cost Insights</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">A practical read on your moving budget</div>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -649,33 +703,38 @@ const CostCalculatorWidget = () => {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="space-y-2">
-                    {parseInsightSections(aiInsights).map((section, index) => (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {parseInsightSections(aiInsights).map((section, index) => {
+                      const { icon: InsightIcon, iconClass, backgroundClass } = getInsightStyle(section.title);
+                      const isListSection = section.items.length > 0;
+
+                      return (
                       <div
                         key={`${section.title}-${index}`}
-                        className="rounded-md border border-purple-100 dark:border-purple-800/70 bg-white/60 dark:bg-gray-800/60 p-3"
+                        className={`rounded-lg border p-3 ${isListSection ? 'sm:col-span-2' : ''} ${backgroundClass}`}
                       >
-                        {section.title && (
-                          <div className="text-xs font-bold uppercase tracking-wide text-purple-700 dark:text-purple-300 mb-1">
-                            {section.title}
+                        <div className="flex items-center gap-2 mb-2">
+                          <InsightIcon className={`h-4 w-4 ${iconClass}`} />
+                          <div className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                            {section.title || 'Key takeaway'}
                           </div>
-                        )}
-                        {section.text && (
-                          <p className="text-sm text-purple-950 dark:text-purple-100 leading-relaxed">
-                            {section.text}
-                          </p>
-                        )}
-                        {section.items.length > 0 && (
-                          <ol className="mt-2 space-y-2 list-decimal list-inside text-sm text-purple-950 dark:text-purple-100">
+                        </div>
+                        {section.text && <p className="text-sm text-foreground/80 leading-relaxed">{section.text}</p>}
+                        {isListSection && (
+                          <ol className="mt-3 grid gap-2 sm:grid-cols-2">
                             {section.items.map((item, itemIndex) => (
-                              <li key={`${item}-${itemIndex}`} className="leading-relaxed pl-1">
-                                {item}
+                              <li key={`${item}-${itemIndex}`} className="flex gap-2 text-sm text-foreground/80 leading-relaxed">
+                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-background/70 text-xs font-semibold text-foreground/70">
+                                  {itemIndex + 1}
+                                </span>
+                                <span>{item}</span>
                               </li>
                             ))}
                           </ol>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
