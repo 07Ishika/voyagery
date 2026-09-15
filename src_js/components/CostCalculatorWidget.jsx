@@ -43,13 +43,13 @@ const parseInsightSections = (insight) => {
     const suggestionMatch = line.match(/^\d+[.)]\s+(.+)$/);
     const bulletMatch = line.match(/^[-*]\s+(.+)$/);
 
-    const boldTitle = boldHeadingMatch?.[1].replace(/\*+/g, '').trim() || '';
+    const boldTitle = boldHeadingMatch?.[1].replace(/\*+/g, '').replace(/:$/, '').trim() || '';
     const isKnownBoldHeading = boldHeadingMatch && sectionTitles.test(boldTitle);
 
     if (headingMatch || isKnownBoldHeading) {
       const match = boldHeadingMatch || headingMatch;
       currentSection = {
-        title: match[1].replace(/\*+/g, '').trim(),
+        title: match[1].replace(/\*+/g, '').replace(/:$/, '').trim(),
         text: match[2].replace(/\*+/g, '').trim(),
         items: []
       };
@@ -58,7 +58,7 @@ const parseInsightSections = (insight) => {
       currentSection.items.push((suggestionMatch || bulletMatch)[1].replace(/\*+/g, '').trim());
     } else if (currentSection) {
       currentSection.text = `${currentSection.text} ${line.replace(/^\*+|\*+$/g, '')}`.trim();
-    } else {
+    } else if (!currentSection) {
       sections.push({ title: '', text: line.replace(/\*+/g, ''), items: [] });
     }
   });
@@ -246,6 +246,23 @@ const CostCalculatorWidget = () => {
     if (!city1Data || !city2Data) return null;
 
     return costOfLivingService.compareCities(city1Data, city2Data);
+  };
+
+  const getBudgetContext = () => {
+    const comparison = getComparisonInsights();
+    if (!comparison) return null;
+
+    const budget = currencyService.convert(totalExpenses, baseCurrency, 'USD');
+    const targetCost = comparison.city2.total;
+    const difference = targetCost - budget;
+
+    return {
+      budget,
+      targetCost,
+      difference,
+      targetCity: comparison.city2.name,
+      isShort: difference > 0
+    };
   };
 
   // Generate AI insights for cost analysis
@@ -699,6 +716,36 @@ const CostCalculatorWidget = () => {
                     );
                   }
                   return null;
+                })()}
+
+                {showLocationComparison && (() => {
+                  const budgetContext = getBudgetContext();
+                  if (!budgetContext) return null;
+
+                  return (
+                    <div className={`rounded-lg border p-3 ${budgetContext.isShort
+                      ? 'border-amber-500/30 bg-amber-500/10'
+                      : 'border-emerald-500/30 bg-emerald-500/10'
+                    }`}>
+                      <div className="text-sm font-semibold">What your total means</div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-md bg-background/60 p-2">
+                          <div className="text-muted-foreground">Your entered total</div>
+                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.budget, 'USD')}</div>
+                        </div>
+                        <div className="rounded-md bg-background/60 p-2">
+                          <div className="text-muted-foreground">Typical {budgetContext.targetCity} total</div>
+                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.targetCost, 'USD')}</div>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                        {budgetContext.isShort
+                          ? `Your current entries are about ${currencyService.formatCurrency(budgetContext.difference, 'USD')} below a typical basic monthly cost in ${budgetContext.targetCity}.`
+                          : `Your current entries leave about ${currencyService.formatCurrency(Math.abs(budgetContext.difference), 'USD')} after a typical basic monthly cost in ${budgetContext.targetCity}.`
+                        }
+                      </p>
+                    </div>
+                  );
                 })()}
               </div>
               
