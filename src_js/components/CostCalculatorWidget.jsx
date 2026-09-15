@@ -136,6 +136,8 @@ const CostCalculatorWidget = () => {
 
   const currencies = currencyService.getSupportedCurrencies();
   const locations = costOfLivingService.getSupportedLocations();
+  const currentLocation = locations.find(location => `${location.countryCode}-${location.cityCode}` === selectedLocation);
+  const targetLocation = locations.find(location => `${location.countryCode}-${location.cityCode}` === comparisonLocation);
 
   const expenseCategories = [
     { key: 'rent', label: 'Rent/Mortgage', placeholder: 'e.g. 1200', icon: Home, color: 'text-blue-500' },
@@ -215,20 +217,16 @@ const CostCalculatorWidget = () => {
     
     if (!cityData) return null;
 
-    // Convert to USD for comparison
-    const exchangeRates = currencyService.exchangeRates || currencyService.fallbackRates;
-    const convertedData = costOfLivingService.convertCostsToUSD(cityData, exchangeRates);
-
     return {
-      rent: convertedData.rent.oneBedroom,
-      groceries: convertedData.food.groceries,
-      transport: convertedData.transport.public,
-      utilities: convertedData.utilities.electricity + convertedData.utilities.water + 
-                convertedData.utilities.internet + convertedData.utilities.phone,
-      entertainment: convertedData.other.entertainment,
-      healthcare: convertedData.other.healthcare,
-      clothing: convertedData.other.clothing,
-      fitness: convertedData.other.fitness
+      rent: cityData.rent.oneBedroom,
+      groceries: cityData.food.groceries,
+      transport: cityData.transport.public,
+      utilities: cityData.utilities.electricity + cityData.utilities.water + 
+                cityData.utilities.internet + cityData.utilities.phone,
+      entertainment: cityData.other.entertainment,
+      healthcare: cityData.other.healthcare,
+      clothing: cityData.other.clothing,
+      fitness: cityData.other.fitness
     };
   };
 
@@ -250,8 +248,9 @@ const CostCalculatorWidget = () => {
     const comparison = getComparisonInsights();
     if (!comparison) return null;
 
-    const budget = currencyService.convert(totalExpenses, baseCurrency, 'USD');
-    const targetCost = comparison.city2.total;
+    const comparisonCurrency = targetLocation?.currency || 'USD';
+    const budget = currencyService.convert(totalExpenses, baseCurrency, comparisonCurrency);
+    const targetCost = currencyService.convert(comparison.city2.total, 'USD', comparisonCurrency);
     const difference = targetCost - budget;
 
     return {
@@ -259,6 +258,7 @@ const CostCalculatorWidget = () => {
       targetCost,
       difference,
       targetCity: comparison.city2.name,
+      currency: comparisonCurrency,
       isShort: difference > 0
     };
   };
@@ -284,6 +284,9 @@ const CostCalculatorWidget = () => {
           const city1MonthlyCost = costOfLivingService.calculateBasicLivingCost(city1USD);
           const city2MonthlyCost = costOfLivingService.calculateBasicLivingCost(city2USD);
           const enteredBudgetUSD = currencyService.convert(totalExpenses, baseCurrency, 'USD');
+          const enteredExpensesUSD = Object.entries(expenses)
+            .map(([category, value]) => `${category}: ${baseCurrency} ${value || 0} (USD ${currencyService.convert(value || 0, baseCurrency, 'USD').toFixed(2)})`)
+            .join('\n');
 
           insightPrompt = `
           Analyze this cost of living comparison for migration planning:
@@ -303,8 +306,10 @@ const CostCalculatorWidget = () => {
           - Transport: USD ${city2USD.transport.public}
           - Utilities: USD ${city2USD.utilities.electricity + city2USD.utilities.water + city2USD.utilities.internet}
 
-          User-entered budget: USD ${enteredBudgetUSD.toFixed(2)} total per month.
-          This is the user's own total budget, not the rent amount. Explain clearly whether it is enough for the target city's typical monthly total.
+          User-entered expenses (entered in ${baseCurrency}, then normalized to USD):
+          ${enteredExpensesUSD}
+          User-entered total: ${baseCurrency} ${totalExpenses.toFixed(2)} = USD ${enteredBudgetUSD.toFixed(2)} per month.
+          Analyze these exact entered values. Do not invent values, replace them with examples, or call the entered total a rent amount.
 
           Return these sections exactly:
           Biggest cost issue: explain the largest USD difference and its impact.
@@ -323,19 +328,21 @@ const CostCalculatorWidget = () => {
         // General budget analysis
         insightPrompt = `
         Analyze this monthly budget for cost optimization:
+        Currency: ${baseCurrency}
         
         Monthly Expenses:
-        - Rent/Housing: $${expenses.rent}
-        - Groceries: $${expenses.groceries}
-        - Transportation: $${expenses.transport}
-        - Utilities: $${expenses.utilities}
-        - Entertainment: $${expenses.entertainment}
-        - Healthcare: $${expenses.healthcare}
-        - Clothing: $${expenses.clothing}
-        - Fitness: $${expenses.fitness}
-        - Other: $${expenses.other}
+        - Rent/Housing: ${baseCurrency} ${expenses.rent || 0}
+        - Groceries: ${baseCurrency} ${expenses.groceries || 0}
+        - Transportation: ${baseCurrency} ${expenses.transport || 0}
+        - Utilities: ${baseCurrency} ${expenses.utilities || 0}
+        - Entertainment: ${baseCurrency} ${expenses.entertainment || 0}
+        - Healthcare: ${baseCurrency} ${expenses.healthcare || 0}
+        - Clothing: ${baseCurrency} ${expenses.clothing || 0}
+        - Fitness: ${baseCurrency} ${expenses.fitness || 0}
+        - Other: ${baseCurrency} ${expenses.other || 0}
         
-        Total: $${totalExpenses}
+        Total: ${baseCurrency} ${totalExpenses.toFixed(2)}
+        Use only these exact values. Do not invent example amounts.
         
         Provide smart budgeting insights:
         1. Are any categories over/under typical ranges?
@@ -413,6 +420,13 @@ const CostCalculatorWidget = () => {
     saveToLocalStorage();
   }, [expenses, baseCurrency, displayCurrency, showConversion, showLocationComparison, selectedLocation, comparisonLocation, aiInsights, showAiInsights]);
 
+  useEffect(() => {
+    if (!showLocationComparison || !currentLocation) return;
+
+    setBaseCurrency(currentLocation.currency);
+    setDisplayCurrency(targetLocation?.currency || currentLocation.currency);
+  }, [showLocationComparison, selectedLocation, comparisonLocation]);
+
   if (!isCalculatorOpen) return null;
 
   return (
@@ -488,7 +502,17 @@ const CostCalculatorWidget = () => {
                 <div className="space-y-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border">
                   <div>
                     <label className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2 block">Your Current Location</label>
-                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                    <Select value={selectedLocation} onValueChange={(value) => {
+                      setSelectedLocation(value);
+                      const location = locations.find(item => `${item.countryCode}-${item.cityCode}` === value);
+                      if (location) {
+                        setBaseCurrency(location.currency);
+                        setDisplayCurrency(comparisonLocation
+                          ? locations.find(item => `${item.countryCode}-${item.cityCode}` === comparisonLocation)?.currency || location.currency
+                          : location.currency
+                        );
+                      }
+                    }}>
                       <SelectTrigger className="w-full h-10">
                         <SelectValue placeholder="Select your current city" />
                       </SelectTrigger>
@@ -505,7 +529,11 @@ const CostCalculatorWidget = () => {
                   
                   <div>
                     <label className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2 block">Target Location</label>
-                    <Select value={comparisonLocation} onValueChange={setComparisonLocation}>
+                    <Select value={comparisonLocation} onValueChange={(value) => {
+                      setComparisonLocation(value);
+                      const location = locations.find(item => `${item.countryCode}-${item.cityCode}` === value);
+                      if (location) setDisplayCurrency(location.currency);
+                    }}>
                       <SelectTrigger className="w-full h-10">
                         <SelectValue placeholder="Select target city" />
                       </SelectTrigger>
@@ -599,11 +627,21 @@ const CostCalculatorWidget = () => {
             {/* Expense Categories */}
             <div className="space-y-4 max-h-80 overflow-y-auto">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">
-                  Monthly Expenses 
+                <div>
+                  <label className="text-sm font-medium block">
+                    {showLocationComparison ? 'What you currently pay each month' : 'Your monthly expenses'}
+                    
                   {showConversion && ` (in ${baseCurrencyInfo?.symbol})`}
-                  {showLocationComparison && selectedLocation && ' (USD equivalent)'}
-                </label>
+                  {showLocationComparison && selectedLocation && ` (${baseCurrency} - ${currentLocation?.cityName || 'current city'})`}
+                  </label>
+                  {showLocationComparison ? (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Enter your real costs in {currentLocation?.cityName || 'your current city'} ({baseCurrency}). The total below is converted to {targetLocation?.currency || baseCurrency} for {targetLocation?.cityName || 'comparison'}.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">Enter what you normally pay each month.</p>
+                  )}
+                </div>
                 <div className="flex gap-1">
                   {showConversion && (
                     <Button
@@ -629,7 +667,7 @@ const CostCalculatorWidget = () => {
                       }}
                       className="h-6 text-xs"
                     >
-                      Use Local Costs
+                      Fill Current City Estimate
                     </Button>
                   )}
                 </div>
@@ -725,21 +763,24 @@ const CostCalculatorWidget = () => {
                       ? 'border-amber-500/30 bg-amber-500/10'
                       : 'border-emerald-500/30 bg-emerald-500/10'
                     }`}>
-                      <div className="text-sm font-semibold">What your total means</div>
+                      <div className="text-sm font-semibold">Your budget compared with {budgetContext.targetCity}</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        The first number comes from your entries. The second is an estimated basic monthly cost for one person in {budgetContext.targetCity}.
+                      </p>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                         <div className="rounded-md bg-background/60 p-2">
-                          <div className="text-muted-foreground">Your entered total</div>
-                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.budget, 'USD')}</div>
+                          <div className="text-muted-foreground">Your entered monthly budget</div>
+                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.budget, budgetContext.currency)}</div>
                         </div>
                         <div className="rounded-md bg-background/60 p-2">
-                          <div className="text-muted-foreground">Typical {budgetContext.targetCity} total</div>
-                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.targetCost, 'USD')}</div>
+                          <div className="text-muted-foreground">Estimated basic {budgetContext.targetCity} cost</div>
+                          <div className="mt-1 text-sm font-semibold">{currencyService.formatCurrency(budgetContext.targetCost, budgetContext.currency)}</div>
                         </div>
                       </div>
                       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                         {budgetContext.isShort
-                          ? `Your current entries are about ${currencyService.formatCurrency(budgetContext.difference, 'USD')} below a typical basic monthly cost in ${budgetContext.targetCity}.`
-                          : `Your current entries leave about ${currencyService.formatCurrency(Math.abs(budgetContext.difference), 'USD')} after a typical basic monthly cost in ${budgetContext.targetCity}.`
+                          ? `Your current entries are about ${currencyService.formatCurrency(budgetContext.difference, budgetContext.currency)} below a typical basic monthly cost in ${budgetContext.targetCity}.`
+                          : `Your current entries leave about ${currencyService.formatCurrency(Math.abs(budgetContext.difference), budgetContext.currency)} after a typical basic monthly cost in ${budgetContext.targetCity}.`
                         }
                       </p>
                     </div>
