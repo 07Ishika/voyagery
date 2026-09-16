@@ -1,3 +1,4 @@
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,21 +13,44 @@ import FloatingCalculatorButton from "./components/FloatingCalculatorButton";
 import Index from "./pages/Index";
 import Cover from "./pages/Cover";
 import RoleSelection from "./pages/RoleSelect";
-import HomeGuide from "./pages/HomeGuide";
-import Community from "./pages/Community";
-import Guides from "./pages/Guides";
-import MigrantRequests from "./pages/MigrantRequests";
-import Profile from "./pages/Profile";
-import CallRequest from "./pages/CallRequest";
-import CostOfLiving from "./pages/CostOfLiving";
+const HomeGuide = lazy(() => import("./pages/HomeGuide"));
+const Community = lazy(() => import("./pages/Community"));
+const Guides = lazy(() => import("./pages/Guides"));
+const MigrantRequests = lazy(() => import("./pages/MigrantRequests"));
+const Profile = lazy(() => import("./pages/Profile"));
+const CallRequest = lazy(() => import("./pages/CallRequest"));
+const CostOfLiving = lazy(() => import("./pages/CostOfLiving"));
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 import ManualLogin from "./pages/ManualLogin";
-import DashboardGuide from "./pages/DashboardGuide";
-import DashboardMigrant from "./pages/DashboardMigrant";
+const DashboardGuide = lazy(() => import("./pages/DashboardGuide"));
+const DashboardMigrant = lazy(() => import("./pages/DashboardMigrant"));
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
+
+const PageLoading = () => {
+  const [showWakeUpMessage, setShowWakeUpMessage] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowWakeUpMessage(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center px-6">
+      <div className="text-center" role="status" aria-live="polite">
+        <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="font-medium">Loading Voyagery...</p>
+        {showWakeUpMessage && (
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            The server is waking up. This may take a few seconds.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const AppShell = () => {
   const location = useLocation();
@@ -38,7 +62,8 @@ const AppShell = () => {
     <div className="min-h-screen bg-background">
       {!isCover && <Header />}
       <ErrorBoundary>
-        <Routes>
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
           <Route path="/" element={<Cover />} />
           <Route path="/role" element={<RoleSelection />} />
           <Route path="/manual-login" element={<ManualLogin />} />
@@ -110,7 +135,8 @@ const AppShell = () => {
           } />
 
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </Suspense>
       </ErrorBoundary>
 
       {showCalculatorButton && <FloatingCalculatorButton />}
