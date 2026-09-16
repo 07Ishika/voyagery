@@ -124,9 +124,15 @@ Collections:
    npm run dev
    ```
 
-5. **Access**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
+## 🌐 Access
+
+**Live App:** https://voyagery.vercel.app
+**Live API:** https://<your-render-service>.onrender.com
+
+### Local Development
+Run the steps in Quick Start above, then:
+1. Frontend: http://localhost:5173
+2. Backend API: http://localhost:5000
 
 ## 👥 User Roles
 
