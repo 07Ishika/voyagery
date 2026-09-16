@@ -1,31 +1,52 @@
-# Voyagery - Global Migration Platform
+# Voyagery — Global Migration Platform
 
 <div align="center">
-  <img src="public/logo.png" alt="Voyagery Logo" width="120" height="120">
-  
-  **Your Journey to Global Success Starts Here**
-  
-  [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongodb.com)
-  [![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)](https://expressjs.com)
-  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org)
-  [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+
+**Your Journey to Global Success Starts Here**
+
+🔗 **[Live App](https://voyagery.vercel.app)**
+
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongodb.com)
+[![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)](https://expressjs.com)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+
 </div>
 
 ## 🌍 About Voyagery
 
-Voyagery is a comprehensive MERN stack platform that connects migrants with verified immigration guides worldwide. Our platform facilitates personalized 1:1 consultations, community insights, and expert advice to help individuals navigate their global migration journey successfully.
+Voyagery is a MERN stack platform that connects migrants with verified immigration guides for personalized 1:1 consultations. It also includes **Costlytic**, a cost-of-living comparison tool with AI-generated relocation insights, to help users evaluate whether a move is financially realistic before they commit to it.
+
+> This is an actively developed MVP built as a personal/portfolio project. See [Project Status](#-project-status) below for what's fully built vs. in progress.
 
 ### ✨ Key Features
 
-- **🔐 Dual Authentication System** - Google OAuth & Manual login with role-based access control
-- **👥 Two-Sided Marketplace** - Separate interfaces for migrants and immigration guides
-- **📞 Session Booking System** - Real-time call request and scheduling functionality
-- **💬 Real-Time Dashboard** - Live updates for session requests and notifications
-- **🌐 Community Platform** - Connect with fellow migrants and share experiences
-- **💰 Cost Calculator** - Integrated cost-of-living calculator for destination planning
-- **📊 Analytics Dashboard** - Comprehensive stats and session management
-- **🔄 Real-Time Polling** - Auto-refresh for new requests and updates
+- **🔐 Authentication** — Google OAuth and manual login, with role-based access for migrants and guides
+- **👥 Two-Sided Marketplace** — Separate dashboards and navigation for migrants and guides
+- **🔍 Guide Discovery** — Search and filter guides by specialization, rating, and experience
+- **📞 Consultation Flow** — Request, accept/decline, and schedule sessions, with meeting links tracked on both dashboards
+- **📊 Migrant & Guide Dashboards** — Request counts, statuses, and upcoming scheduled calls
+- **📁 Document Management** — Upload and manage trip files and guide credentials
+- **💰 Costlytic** — Compare cost of living between two cities (housing, food, transport, utilities), convert currencies, and score budget feasibility against real user input
+- **🤖 AI Cost Insights** — LLM-generated recommendations based on the cost comparison (biggest cost gaps, hidden costs, budget adjustment suggestions)
+- **🔄 Auto-Refreshing Dashboards** — Polling-based updates for new requests
+
+## 📌 Project Status
+
+| Area | Status |
+|---|---|
+| Auth (Google OAuth + manual) | ✅ Complete |
+| Guide search & discovery | ✅ Complete |
+| Consultation request/booking flow | ✅ Complete |
+| Migrant & guide dashboards | ✅ Complete |
+| Document upload | ✅ Complete |
+| Costlytic (cost comparison + currency conversion) | ✅ Complete |
+| AI cost insights | ✅ Complete |
+| Community discussions | 🚧 Prototype / mock data — schema and UI in place, backend integration in progress |
+| Guide profile pages (extended content) | 🚧 Partial — some sections still use placeholder data |
+
+The live demo includes seeded guide profiles and sample consultations so the core flows can be explored end-to-end without signing up.
 
 ## 🏗️ Architecture
 
@@ -33,69 +54,57 @@ Voyagery is a comprehensive MERN stack platform that connects migrants with veri
 ```
 src_js/
 ├── components/          # Reusable UI components
-├── pages/              # Route-based page components
-├── contexts/           # React Context providers
-├── hooks/              # Custom React hooks
-├── services/           # API service layer
-└── utils/              # Utility functions
+├── pages/               # Route-based page components
+├── contexts/            # React Context providers
+├── hooks/               # Custom React hooks
+├── services/            # API service layer
+└── utils/               # Utility functions
 ```
 
 ### Backend (Node.js + Express)
 ```
 server/
-├── index.js            # Main server file with API routes
-├── models/             # Database schemas and models
-├── middleware/         # Authentication and validation
-├── utils/              # Server utilities
-└── config/             # Database and environment configuration
+├── index.js             # Main server file with API routes
+├── models/              # Mongoose schemas
+├── middleware/          # Authentication and validation
+├── utils/               # Server utilities
+└── config/              # Database and environment configuration
 ```
 
 ### Database (MongoDB)
 ```
 Collections:
-├── users               # User authentication data
-├── profiles            # Extended user profiles (role-specific)
-├── guide_sessions      # Session requests and bookings
-├── migrant_requests    # Migration assistance requests
-├── messages            # Chat messages between users
-├── documents           # File uploads and verification
-├── reviews             # Guide ratings and feedback
-└── notifications       # User notifications
+├── users                # Authentication data
+├── profiles             # Extended, role-specific user profiles
+├── guide_sessions        # Session requests and bookings
+├── documents            # Uploaded files
 ```
+> Update this list to match your actual `models/` folder before publishing — remove any collections (e.g. messages, reviews, notifications) that aren't implemented yet.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - **Node.js** (v16 or higher)
-- **MongoDB** (v4.4 or higher)
-- **npm** or **yarn**
+- **MongoDB** (v4.4 or higher, local or Atlas)
+- **npm**
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/voyagery.git
+   git clone https://github.com/07Ishika/voyagery.git
    cd voyagery
    ```
 
 2. **Install dependencies**
    ```bash
-   # Install frontend dependencies
    npm install
-   
-   # Install backend dependencies
-   cd server
-   npm install
+   cd server && npm install && cd ..
    ```
 
-3. **Environment Setup**
-   ```bash
-   # Create environment file in server directory
-   cd server
-   cp .env.example .env
-   ```
-   
-   Configure your `.env` file:
+3. **Environment setup**
+
+   Create a `.env` file inside `server/`:
    ```env
    MONGODB_URI=mongodb://localhost:27017/voyagery
    GOOGLE_CLIENT_ID=your_google_client_id
@@ -104,201 +113,122 @@ Collections:
    SESSION_SECRET=your_session_secret
    PORT=5000
    ```
+   > List every env var your app actually reads (e.g. an LLM API key for AI insights, a currency-conversion API key) — check `server/config` and add them here.
 
-4. **Database Setup**
+4. **Run the app**
    ```bash
-   # Start MongoDB service
-   mongod
-   
-   # Create test users and data
-   node create-test-users.js
-   ```
+   # Terminal 1
+   cd server && node index.js
 
-5. **Start the Application**
-   ```bash
-   # Terminal 1: Start backend server
-   cd server
-   node index.js
-   
-   # Terminal 2: Start frontend development server
-   cd ..
+   # Terminal 2
    npm run dev
    ```
 
-6. **Access the Application**
-   - **Frontend**: http://localhost:5173
-   - **Backend API**: http://localhost:5000
+5. **Access**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
 
-## 👥 User Roles & Features
+## 👥 User Roles
 
-### 🧳 For Migrants
-- **Personalized Dashboard** - Welcome page with quick actions
-- **Guide Discovery** - Browse and filter verified immigration guides
-- **Session Booking** - Request consultations with detailed requirements
-- **Cost Calculator** - Plan budget for destination countries
-- **Community Access** - Connect with other migrants
-- **Profile Management** - Track immigration goals and progress
+### 🧳 Migrants
+- Dashboard with request status (total, pending, accepted, scheduled)
+- Browse and filter verified guides
+- Request consultations
+- Use Costlytic to compare and plan destination costs
+- Upload and manage documents
 
-### 👨‍💼 For Guides
-- **Professional Dashboard** - Manage incoming session requests
-- **Request Management** - Accept/decline consultation requests
-- **Client Communication** - Contact and schedule with migrants
-- **Session Analytics** - Track performance and client satisfaction
-- **Profile Showcase** - Display expertise and credentials
-- **Real-Time Notifications** - Instant alerts for new requests
+### 👨‍💼 Guides
+- Dashboard to manage incoming requests
+- Accept/decline consultations
+- View and contact migrants
+- Profile showcasing specialization, languages, and experience
 
 ## 🛠️ Technology Stack
 
-### Frontend
-- **React 18** - Modern UI library with hooks
-- **Vite** - Fast build tool and development server
-- **Tailwind CSS** - Utility-first CSS framework
-- **shadcn/ui** - High-quality component library
-- **React Router** - Client-side routing
-- **Lucide React** - Beautiful icon library
-
-### Backend
-- **Node.js** - JavaScript runtime environment
-- **Express.js** - Web application framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB object modeling
-- **Passport.js** - Authentication middleware
-- **Express Session** - Session management
-- **CORS** - Cross-origin resource sharing
-
-### Authentication
-- **Google OAuth 2.0** - Social login integration
-- **Session-based Auth** - Secure session management
-- **Role-based Access Control** - Migrant/Guide permissions
-- **Protected Routes** - Route-level authentication
+**Frontend:** React 18, Vite, Tailwind CSS, shadcn/ui, React Router, Lucide React
+**Backend:** Node.js, Express.js, MongoDB, Mongoose, Passport.js, Express Session
+**Auth:** Google OAuth 2.0, session-based auth, role-based access control
+**AI:** LLM integration for cost/relocation insight generation
+**Deployment:** Vercel (frontend), Render (backend), MongoDB Atlas
 
 ## 📡 API Endpoints
 
+> Confirm each of these against `server/index.js` / your route files before publishing — remove anything not implemented, add anything missing (e.g. Costlytic and AI insight routes).
+
 ### Authentication
 ```
-GET  /auth/google              # Google OAuth login
-GET  /auth/google/callback     # OAuth callback
-GET  /auth/user               # Get current user
-POST /auth/manual-login       # Manual login
-POST /auth/set-role          # Set user role
-GET  /auth/logout            # Logout user
+GET  /auth/google
+GET  /auth/google/callback
+GET  /auth/user
+POST /auth/manual-login
+POST /auth/set-role
+GET  /auth/logout
 ```
 
 ### Profiles
 ```
-GET  /api/profile/:userId     # Get user profile
-POST /api/profile            # Create/update profile
+GET  /api/profile/:userId
+POST /api/profile
 ```
 
 ### Sessions
 ```
-GET  /api/guide-sessions      # Get sessions (with filters)
-POST /api/guide-sessions      # Create session request
-PUT  /api/guide-sessions/:id  # Update session status
-DELETE /api/guide-sessions/:id # Delete session
+GET    /api/guide-sessions
+POST   /api/guide-sessions
+PUT    /api/guide-sessions/:id
+DELETE /api/guide-sessions/:id
 ```
 
 ### Search & Discovery
 ```
-GET  /api/guides/search       # Search guides with filters
-GET  /api/migrant-requests    # Get migration requests
+GET /api/guides/search
 ```
 
-## 🔧 Development
-
-### Project Structure
+### Costlytic
 ```
-voyagery/
-├── public/                 # Static assets
-├── src_js/                # Frontend source code
-├── server/                # Backend source code
-├── docs/                  # Documentation
-├── tests/                 # Test files
-└── scripts/               # Utility scripts
+GET  /api/costlytic/compare
+POST /api/costlytic/insights
 ```
 
-### Available Scripts
+## 🔧 Available Scripts
 
-**Frontend:**
+**Frontend**
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
+npm run dev
+npm run build
+npm run preview
+npm run lint
 ```
 
-**Backend:**
+**Backend**
 ```bash
-node index.js                # Start server
-node create-test-users.js    # Create test data
-node debug-sessions.js       # Debug database
-```
-
-### Testing
-
-```bash
-# Run frontend tests
-npm test
-
-# Run backend tests
-cd server && npm test
-
-# Run integration tests
-npm run test:integration
+node index.js
+node create-test-users.js
 ```
 
 ## 🚀 Deployment
 
-### Production Build
-```bash
-# Build frontend
-npm run build
+Deployed frontend on **Vercel** and backend on **Render**, with a hosted **MongoDB Atlas** database.
 
-# Start production server
-cd server
-NODE_ENV=production node index.js
-```
-
-### Environment Variables (Production)
+Production environment variables (backend):
 ```env
 NODE_ENV=production
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/voyagery
-GOOGLE_CLIENT_ID=production_client_id
-GOOGLE_CLIENT_SECRET=production_client_secret
-GOOGLE_CALLBACK_URL=https://yourdomain.com/auth/google/callback
-SESSION_SECRET=secure_random_string
+MONGODB_URI=your_atlas_connection_string
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=https://your-backend.onrender.com/auth/google/callback
+SESSION_SECRET=...
 PORT=5000
 ```
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+> Note: the Render free tier sleeps after inactivity — the first request after idle time may take 30–50 seconds.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **MongoDB** for the robust database solution
-- **React Team** for the amazing frontend library
-- **Express.js** for the lightweight backend framework
-- **Tailwind CSS** for the utility-first styling approach
-- **shadcn/ui** for the beautiful component library
-
-## 📞 Support
-
-For support, email support@voyagery.com or join our community Discord server.
+This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
-  <p>Made with ❤️ for the global migration community</p>
-  <p>© 2024 Voyagery. All rights reserved.</p>
+  <p>Built by <a href="https://github.com/07Ishika">Ishika Anam</a></p>
 </div>
