@@ -105,6 +105,10 @@ class ApiService {
     return this.fetchData(`/dashboard/${userId}`);
   }
 
+  getPublicStats() {
+    return this.fetchData('/public-stats');
+  }
+
   // Auth
   async getCurrentUser() {
     const response = await fetch(`${AUTH_BASE_URL}/auth/user`, {

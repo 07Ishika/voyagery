@@ -2,8 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Users, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import ExploreNowButton from "../components/GoogleLoginCover";
 import ThemeToggle from "../components/ThemeToggle";
+import { useApiData } from "../hooks/useApi";
+import apiService from "../services/api";
 
 const Cover = () => {
+  const { data: stats } = useApiData(() => apiService.getPublicStats(), []);
+  const formatStat = (value) => (stats ? value : '...');
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#f6f8ff] via-[#eef2ff] to-white dark:from-[#0b0620] dark:via-[#14112d] dark:to-[#1a1240]">
@@ -52,15 +56,15 @@ const Cover = () => {
 
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="bg-card/60 border border-border rounded-xl p-5">
-                <div className="text-2xl font-bold text-primary">500+</div>
+                <div className="text-2xl font-bold text-primary">{formatStat(stats?.guides)}</div>
                 <div className="text-sm text-muted-foreground">Expert Guides</div>
               </div>
               <div className="bg-card/60 border border-border rounded-xl p-5">
-                <div className="text-2xl font-bold text-secondary">50+</div>
+                <div className="text-2xl font-bold text-secondary">{formatStat(stats?.countries)}</div>
                 <div className="text-sm text-muted-foreground">Countries</div>
               </div>
               <div className="bg-card/60 border border-border rounded-xl p-5">
-                <div className="text-2xl font-bold text-accent">25K+</div>
+                <div className="text-2xl font-bold text-accent">{formatStat(stats?.successStories)}</div>
                 <div className="text-sm text-muted-foreground">Success Stories</div>
               </div>
             </div>
@@ -95,8 +99,8 @@ const Cover = () => {
             <div className="mt-8 pt-6 border-t border-border">
               <p className="text-xs text-muted-foreground">Trusted by migrants worldwide</p>
               <div className="mt-3 flex items-center gap-6 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Users className="w-3 h-3" /> 500+ Guides</span>
-                <span>85% Success Rate</span>
+                <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {formatStat(stats?.guides)} Guides</span>
+                <span>{stats ? `${stats.migrants.toLocaleString()} Migrants` : 'Loading stats...'}</span>
               </div>
             </div>
           </aside>

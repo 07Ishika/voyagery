@@ -8,8 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Check, Heart, DollarSign, Users, BookOpen, MessageCircle, ArrowRight, Calendar, Star, TrendingUp, MapPin, Clock, Languages, Award, Video, MessageSquare, Plane, Globe, Orbit } from "lucide-react";
 import { readBookings, updateBooking } from "@/lib/storage";
 import { motion } from "framer-motion";
+import { useApiData } from "../hooks/useApi";
+import apiService from "../services/api";
 
 const HomeGuide = () => {
+  const { data: stats } = useApiData(() => apiService.getPublicStats(), []);
   const [requests, setRequests] = useState([]);
   const refresh = () => setRequests(readBookings());
   useEffect(() => { refresh(); }, []);
@@ -208,11 +211,11 @@ const HomeGuide = () => {
               {/* Stats Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
                 <div className="bg-card backdrop-blur-sm border rounded-xl p-6">
-                  <div className="text-3xl font-bold text-blue-400">500+</div>
+                  <div className="text-3xl font-bold text-blue-400">{stats?.guides ?? '...'}</div>
                   <div className="text-muted-foreground">Verified Guides</div>
                 </div>
                 <div className="bg-card backdrop-blur-sm border rounded-xl p-6">
-                  <div className="text-3xl font-bold text-purple-400">50+</div>
+                  <div className="text-3xl font-bold text-purple-400">{stats?.countries ?? '...'}</div>
                   <div className="text-muted-foreground">Countries</div>
                 </div>
                 <div className="bg-card backdrop-blur-sm border rounded-xl p-6">

@@ -15,6 +15,7 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const callRoutes = require('./routes/callRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const publicStatsRoutes = require('./routes/publicStatsRoutes');
 const apiRoutes = require('./routes/index');
 
 function createApp() {
@@ -70,6 +71,7 @@ function createApp() {
   app.use('/api', documentRoutes);
   app.use('/api', callRoutes);
   app.use('/api', aiRoutes);
+  app.use('/api', publicStatsRoutes);
   app.use('/api', apiRoutes);
 
   app.use(errorHandler);

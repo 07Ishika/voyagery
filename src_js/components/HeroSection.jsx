@@ -1,8 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Users, Video } from "lucide-react";
 import heroImage from "@/assets/hero-image.jpg";
+import { useApiData } from "../hooks/useApi";
+import apiService from "../services/api";
 
 export const HeroSection = () => {
+  const { data: stats } = useApiData(() => apiService.getPublicStats(), []);
+  const formatStat = (value) => (stats ? value : '...');
+
   return (
     <section className="relative py-20 lg:py-32 overflow-hidden">
       {/* Background Elements */}
@@ -17,7 +22,9 @@ export const HeroSection = () => {
             <div className="space-y-4">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
                 <Users className="w-4 h-4 mr-2" />
-                <span className="text-sm font-medium">Trusted by 10,000+ migrants</span>
+                <span className="text-sm font-medium">
+                  {stats ? `${stats.migrants.toLocaleString()} migrants registered` : 'Loading live community stats...'}
+                </span>
               </div>
               
               <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
@@ -51,15 +58,15 @@ export const HeroSection = () => {
             {/* Stats */}
             <div className="flex flex-wrap gap-8 pt-8">
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">500+</div>
+                <div className="text-3xl font-bold text-primary">{formatStat(stats?.guides)}</div>
                 <div className="text-sm text-muted-foreground">Expert Guides</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-secondary">50+</div>
+                <div className="text-3xl font-bold text-secondary">{formatStat(stats?.countries)}</div>
                 <div className="text-sm text-muted-foreground">Countries</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-accent">25K+</div>
+                <div className="text-3xl font-bold text-accent">{formatStat(stats?.successStories)}</div>
                 <div className="text-sm text-muted-foreground">Success Stories</div>
               </div>
             </div>
