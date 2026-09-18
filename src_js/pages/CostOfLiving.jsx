@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,14 +50,29 @@ import { motion } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import { useCalculator } from '../contexts/CalculatorContext';
 import MigrantAnalytics from '../components/MigrantAnalytics';
+import currencyService from '../services/currencyService';
 
 const CostOfLiving = () => {
+  const defaultCurrency = typeof navigator !== 'undefined' && navigator.language.toLowerCase().includes('-in')
+    ? 'INR'
+    : 'USD';
+  const [currency, setCurrency] = useState(defaultCurrency);
   const [selectedCountry, setSelectedCountry] = useState('canada');
   const [selectedCity, setSelectedCity] = useState('toronto');
   const [comparisonCountry, setComparisonCountry] = useState('india');
   const [comparisonCity, setComparisonCity] = useState('mumbai');
   const [analyticsView, setAnalyticsView] = useState('original'); // 'original' or 'migration'
   const { openCalculator } = useCalculator();
+
+  useEffect(() => {
+    currencyService.initialize();
+  }, []);
+
+  const formatAmount = (amount) => currencyService.formatCurrency(
+    currencyService.convert(amount, 'USD', currency),
+    currency
+  );
+  const formatChartAmount = (amount) => currencyService.formatCurrency(amount, currency);
 
   // Glassmorphism tooltip styles
   const tooltipStyles = {
@@ -78,7 +93,7 @@ const CostOfLiving = () => {
           <p className="text-sm font-medium text-white/90 mb-2">{label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm text-white/80">
-              <span style={{ color: entry.color }}>{entry.dataKey}</span>: ${entry.value}
+              <span style={{ color: entry.color }}>{entry.dataKey}</span>: {formatChartAmount(entry.value)}
             </p>
           ))}
         </div>
@@ -231,6 +246,8 @@ const CostOfLiving = () => {
   const getAnalyticsData = () => {
     if (!currentCityData || !comparisonCityData) return null;
 
+    const displayValue = (amount) => currencyService.convert(amount, 'USD', currency);
+
     // Calculate category totals
     const currentHousing = currentCityData.rent.oneBedroom;
     const currentFood = currentCityData.food.groceries + currentCityData.food.restaurant;
@@ -248,23 +265,23 @@ const CostOfLiving = () => {
     const barData = [
       {
         category: 'Housing',
-        [currentCityData.name]: currentHousing,
-        [comparisonCityData.name]: comparisonHousing
+        [currentCityData.name]: displayValue(currentHousing),
+        [comparisonCityData.name]: displayValue(comparisonHousing)
       },
       {
         category: 'Food & Dining',
-        [currentCityData.name]: currentFood,
-        [comparisonCityData.name]: comparisonFood
+        [currentCityData.name]: displayValue(currentFood),
+        [comparisonCityData.name]: displayValue(comparisonFood)
       },
       {
         category: 'Transportation',
-        [currentCityData.name]: currentTransport,
-        [comparisonCityData.name]: comparisonTransport
+        [currentCityData.name]: displayValue(currentTransport),
+        [comparisonCityData.name]: displayValue(comparisonTransport)
       },
       {
         category: 'Utilities',
-        [currentCityData.name]: currentUtilities,
-        [comparisonCityData.name]: comparisonUtilities
+        [currentCityData.name]: displayValue(currentUtilities),
+        [comparisonCityData.name]: displayValue(comparisonUtilities)
       }
     ];
 
@@ -278,18 +295,18 @@ const CostOfLiving = () => {
 
     // Pie chart data for current city
     const currentPieData = [
-      { name: 'Housing', value: currentHousing, color: colorPalette.housing },
-      { name: 'Food & Dining', value: currentFood, color: colorPalette.food },
-      { name: 'Transportation', value: currentTransport, color: colorPalette.transport },
-      { name: 'Utilities', value: currentUtilities, color: colorPalette.utilities }
+      { name: 'Housing', value: displayValue(currentHousing), color: colorPalette.housing },
+      { name: 'Food & Dining', value: displayValue(currentFood), color: colorPalette.food },
+      { name: 'Transportation', value: displayValue(currentTransport), color: colorPalette.transport },
+      { name: 'Utilities', value: displayValue(currentUtilities), color: colorPalette.utilities }
     ];
 
     // Pie chart data for comparison city
     const comparisonPieData = [
-      { name: 'Housing', value: comparisonHousing, color: colorPalette.housing },
-      { name: 'Food & Dining', value: comparisonFood, color: colorPalette.food },
-      { name: 'Transportation', value: comparisonTransport, color: colorPalette.transport },
-      { name: 'Utilities', value: comparisonUtilities, color: colorPalette.utilities }
+      { name: 'Housing', value: displayValue(comparisonHousing), color: colorPalette.housing },
+      { name: 'Food & Dining', value: displayValue(comparisonFood), color: colorPalette.food },
+      { name: 'Transportation', value: displayValue(comparisonTransport), color: colorPalette.transport },
+      { name: 'Utilities', value: displayValue(comparisonUtilities), color: colorPalette.utilities }
     ];
 
     // Radar chart data (percentage differences)
@@ -386,6 +403,21 @@ const CostOfLiving = () => {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Compare living costs between cities worldwide. Get accurate estimates for rent, food, transport, and more.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <label htmlFor="cost-currency" className="text-sm font-medium">Display currency</label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger id="cost-currency" className="w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyService.getSupportedCurrencies().map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Comparison Section */}
@@ -435,7 +467,7 @@ const CostOfLiving = () => {
                 {currentCityData && (
                   <div className="pt-4">
                     <div className="text-2xl font-bold text-primary mb-2">
-                      ${currentTotal.toLocaleString()}/month
+                      {formatAmount(currentTotal)}/month
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Estimated monthly cost for a single person
@@ -490,7 +522,7 @@ const CostOfLiving = () => {
                 {comparisonCityData && (
                   <div className="pt-4">
                     <div className="text-2xl font-bold text-secondary mb-2">
-                      ${comparisonTotal.toLocaleString()}/month
+                      {formatAmount(comparisonTotal)}/month
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Estimated monthly cost for a single person
@@ -518,7 +550,7 @@ const CostOfLiving = () => {
                       <div className={`text-2xl font-bold flex items-center gap-1 ${difference > 0 ? 'text-red-500' : 'text-green-500'
                         }`}>
                         {difference > 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
-                        ${Math.abs(difference).toLocaleString()}
+                        {formatAmount(Math.abs(difference))}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {Math.abs(percentageDiff).toFixed(1)}% {difference > 0 ? 'more' : 'less'}
@@ -550,19 +582,19 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Studio</span>
-                    <span className="font-medium">${currentCityData.rent.studio}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.studio)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">1 Bedroom</span>
-                    <span className="font-medium">${currentCityData.rent.oneBedroom}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.oneBedroom)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">2 Bedroom</span>
-                    <span className="font-medium">${currentCityData.rent.twoBedroom}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.twoBedroom)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">3 Bedroom</span>
-                    <span className="font-medium">${currentCityData.rent.threeBedroom}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.threeBedroom)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -578,15 +610,15 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Groceries</span>
-                    <span className="font-medium">${currentCityData.food.groceries}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.groceries)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Restaurant</span>
-                    <span className="font-medium">${currentCityData.food.restaurant}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.restaurant)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Fast Food</span>
-                    <span className="font-medium">${currentCityData.food.fastFood}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.fastFood)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -602,15 +634,15 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Public Transport</span>
-                    <span className="font-medium">${currentCityData.transport.public}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.public)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Gas</span>
-                    <span className="font-medium">${currentCityData.transport.gas}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.gas)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Car Payment</span>
-                    <span className="font-medium">${currentCityData.transport.car}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.car)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -626,19 +658,19 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Electricity</span>
-                    <span className="font-medium">${currentCityData.utilities.electricity}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.electricity)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Water</span>
-                    <span className="font-medium">${currentCityData.utilities.water}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.water)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Internet</span>
-                    <span className="font-medium">${currentCityData.utilities.internet}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.internet)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Phone</span>
-                    <span className="font-medium">${currentCityData.utilities.phone}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.phone)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -766,7 +798,7 @@ const CostOfLiving = () => {
                             tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
                             axisLine={{ stroke: 'hsl(var(--border))' }}
                             tickLine={{ stroke: 'hsl(var(--border))' }}
-                            tickFormatter={(value) => `$${value}`}
+                            tickFormatter={(value) => formatChartAmount(value)}
                           />
                           <Tooltip
                             contentStyle={{
@@ -775,7 +807,7 @@ const CostOfLiving = () => {
                               borderRadius: '8px',
                               color: 'hsl(var(--card-foreground))'
                             }}
-                            formatter={(value, name) => [`$${value}`, name]}
+                            formatter={(value, name) => [formatChartAmount(value), name]}
                           />
                           <Legend />
                           <Bar
@@ -841,7 +873,7 @@ const CostOfLiving = () => {
                                 borderRadius: '8px',
                                 color: 'hsl(var(--card-foreground))'
                               }}
-                              formatter={(value, name) => [`$${value}`, name]}
+                              formatter={(value, name) => [formatChartAmount(value), name]}
                             />
                             <Legend />
                           </PieChart>
@@ -890,7 +922,7 @@ const CostOfLiving = () => {
                                 borderRadius: '8px',
                                 color: 'hsl(var(--card-foreground))'
                               }}
-                              formatter={(value, name) => [`$${value}`, name]}
+                              formatter={(value, name) => [formatChartAmount(value), name]}
                             />
                             <Legend />
                           </PieChart>
