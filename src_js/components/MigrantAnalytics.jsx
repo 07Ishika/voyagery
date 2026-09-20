@@ -42,7 +42,9 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
   const [showSalaryInputs, setShowSalaryInputs] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState({
     visa: '',
+    languageMedical: '',
     travel: '',
+    temporaryStay: '',
     deposit: '',
     setup: ''
   });
@@ -118,36 +120,21 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
   const currentCosts = buildCosts(currentCity);
   const targetCosts = buildCosts(targetCity);
 
-  // Curated salary benchmarks are separate from Numbeo living-cost snapshots.
-  const salaryData = {
-    'Mumbai': { avg: 800000, min: 400000, max: 1500000, currency: 'INR' }, // IT/Finance avg
-    'Delhi': { avg: 750000, min: 350000, max: 1400000, currency: 'INR' },
-    'Toronto': { avg: 75000, min: 45000, max: 120000, currency: 'CAD' }, // Mid-level professional
-    'Vancouver': { avg: 72000, min: 42000, max: 115000, currency: 'CAD' },
-    'New York': { avg: 95000, min: 55000, max: 160000, currency: 'USD' },
-    'San Francisco': { avg: 120000, min: 70000, max: 200000, currency: 'USD' },
-    'London': { avg: 50000, min: 30000, max: 80000, currency: 'GBP' },
-    'Sydney': { avg: 85000, min: 50000, max: 130000, currency: 'AUD' }
-  };
-
-  const currentSalaryInfo = salaryData[currentCity?.name] || { avg: 50000, currency: 'USD' };
-  const targetSalaryInfo = salaryData[targetCity?.name] || { avg: 60000, currency: 'USD' };
-
-  // Use custom salary if provided, otherwise use estimates
-  const currentMonthlySalary = customCurrentSalary ? 
-    parseFloat(customCurrentSalary) : currentSalaryInfo.avg / 12;
-  const targetMonthlySalary = customTargetSalary ? 
-    parseFloat(customTargetSalary) : targetSalaryInfo.avg / 12;
+  const currentSalaryCurrency = currentCity?.currency || 'USD';
+  const targetSalaryCurrency = targetCity?.currency || 'USD';
+  const currentMonthlySalary = customCurrentSalary ? parseFloat(customCurrentSalary) : null;
+  const targetMonthlySalary = customTargetSalary ? parseFloat(customTargetSalary) : null;
+  const hasSalaryInputs = Number.isFinite(currentMonthlySalary) && Number.isFinite(targetMonthlySalary);
 
   // Compare each salary directly with the corresponding Numbeo estimate.
-  const salaryBudgetData = currentCosts && targetCosts ? [
+  const salaryBudgetData = currentCosts && targetCosts && hasSalaryInputs ? [
     {
       level: `Current\n${currentCity.name}`,
       monthlySalary: Math.round(currentMonthlySalary),
       livingCosts: Math.round(currentCosts.total),
       savings: Math.round(currentMonthlySalary - currentCosts.total),
-      canAfford: currentMonthlySalary > currentCosts.total,
-      currency: currentCity.currency
+      canAfford: currentMonthlySalary >= currentCosts.total,
+      currency: currentSalaryCurrency
     },
     {
       level: `Target\n${targetCity.name}`,
@@ -155,14 +142,16 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
       livingCosts: Math.round(targetCosts.total),
       savings: Math.round(targetMonthlySalary - targetCosts.total),
       canAfford: targetMonthlySalary >= targetCosts.total,
-      currency: targetCity.currency
+      currency: targetSalaryCurrency
     }
   ] : [];
 
   // One-time migration costs are user inputs; no destination cost is invented.
   const migrationBudgetData = [
-    { phase: 'Visa & documents', cost: Number(oneTimeCosts.visa) || 0, items: 'Visa fees, medical exams, document preparation' },
-    { phase: 'Travel & moving', cost: Number(oneTimeCosts.travel) || 0, items: 'Flights, shipping, temporary accommodation' },
+    { phase: 'Visa & documents', cost: Number(oneTimeCosts.visa) || 0, items: 'Visa fees, document preparation and legal assistance' },
+    { phase: 'Language & medical', cost: Number(oneTimeCosts.languageMedical) || 0, items: 'Language tests, medical exams and police clearance' },
+    { phase: 'Travel & moving', cost: Number(oneTimeCosts.travel) || 0, items: 'Flights, baggage and shipping' },
+    { phase: 'Temporary accommodation', cost: Number(oneTimeCosts.temporaryStay) || 0, items: 'Short-term stay before permanent housing' },
     { phase: 'Housing deposit', cost: Number(oneTimeCosts.deposit) || 0, items: 'Security deposit and initial rent' },
     { phase: 'Initial setup', cost: Number(oneTimeCosts.setup) || 0, items: 'Furniture, registration, essential purchases' }
   ];
@@ -271,10 +260,10 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
               <div className="text-2xl font-bold mb-2">
                 {salaryBudgetData.filter(s => s.canAfford).length > 2 ? '🎉' : 
                  salaryBudgetData.filter(s => s.canAfford).length > 1 ? '👍' : '⚠️'} 
-                Financial Readiness Score
+                Affordability Check
               </div>
               <div className="text-lg text-muted-foreground mb-4">
-                {salaryBudgetData.filter(s => s.canAfford).length}/{salaryBudgetData.length} city comparisons are affordable
+                {salaryBudgetData.filter(s => s.canAfford).length}/{salaryBudgetData.length} salary-to-cost comparisons are affordable
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {salaryBudgetData.map((scenario, index) => (
@@ -317,7 +306,7 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
               )}
             </div>
           </div>
-          <div className="h-96">
+          {salaryBudgetData.length > 0 ? <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salaryBudgetData} margin={{ top: 20, right: 30, left: 20, bottom: 70 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
@@ -358,14 +347,18 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                 <Bar dataKey="savings" fill={colors.primary} name="Monthly Savings" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </div> : (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Enter both monthly salaries below to calculate the affordability comparison.
+            </div>
+          )}
           <div className="mt-6 space-y-4">
             <div className="space-y-4">
               {/* Salary Input Section */}
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                    📊 Salary Estimates vs Your Reality
+                    💰 Enter Your Monthly Salaries
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -386,23 +379,22 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                         }}
                         className="text-xs text-red-600 hover:text-red-700"
                       >
-                        Reset to Estimates
+                        Clear Salary Inputs
                       </Button>
                     )}
                   </div>
                 </div>
                 
                 <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1 mb-3">
-                  <div>• <strong>{currentCity?.name}:</strong> {customCurrentSalary ? 
-                    `Using YOUR custom salary: ${currentSalaryInfo.currency} ${(parseFloat(customCurrentSalary) * 12).toLocaleString()}/year (Monthly: ${parseFloat(customCurrentSalary).toLocaleString()})` : 
-                    `Using estimate of ${currentSalaryInfo.currency} ${currentSalaryInfo.avg.toLocaleString()}/year (Monthly: ${Math.round(currentSalaryInfo.avg/12).toLocaleString()})`}
+                  <div>• <strong>{currentCity?.name}:</strong> {customCurrentSalary ?
+                    `Using your input: ${currentSalaryCurrency} ${parseFloat(customCurrentSalary).toLocaleString()} per month` :
+                    'Enter your current monthly salary to run this check'}
                   </div>
-                  <div>• <strong>{targetCity?.name}:</strong> {customTargetSalary ? 
-                    `Using YOUR custom salary: ${targetSalaryInfo.currency} ${(parseFloat(customTargetSalary) * 12).toLocaleString()}/year (Monthly: ${parseFloat(customTargetSalary).toLocaleString()})` : 
-                    `Using estimate of ${targetSalaryInfo.currency} ${targetSalaryInfo.avg.toLocaleString()}/year (Monthly: ${Math.round(targetSalaryInfo.avg/12).toLocaleString()})`}
+                  <div>• <strong>{targetCity?.name}:</strong> {customTargetSalary ?
+                    `Using your input: ${targetSalaryCurrency} ${parseFloat(customTargetSalary).toLocaleString()} per month` :
+                    'Enter your expected target-city monthly salary to run this check'}
                   </div>
-                  <div>• <strong>Storage Key:</strong> {storageKey}</div>
-                  <div>• <strong>Salary source:</strong> {customCurrentSalary || customTargetSalary ? 'Your custom inputs; otherwise ' : ''}curated salary benchmarks (separate from Numbeo cost data)</div>
+                  <div>• <strong>Salary source:</strong> user-entered monthly salaries</div>
                   <div>• <strong>Formula:</strong> monthly salary − estimated monthly cost = monthly buffer</div>
                 </div>
 
@@ -410,11 +402,11 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                   <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-yellow-200 dark:border-yellow-700">
                     <div>
                       <label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 block mb-1">
-                        Your {currentCity?.name} Monthly Salary ({currentSalaryInfo.currency})
+                        Your {currentCity?.name} Monthly Salary ({currentSalaryCurrency})
                       </label>
                       <Input
                         type="number"
-                        placeholder={Math.round(currentSalaryInfo.avg / 12).toString()}
+                        placeholder="Enter amount"
                         value={customCurrentSalary}
                         onChange={(e) => updateCustomCurrentSalary(e.target.value)}
                         className="text-sm"
@@ -422,11 +414,11 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                     </div>
                     <div>
                       <label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 block mb-1">
-                        Expected {targetCity?.name} Monthly Salary ({targetSalaryInfo.currency})
+                        Expected {targetCity?.name} Monthly Salary ({targetSalaryCurrency})
                       </label>
                       <Input
                         type="number"
-                        placeholder={Math.round(targetSalaryInfo.avg / 12).toString()}
+                        placeholder="Enter amount"
                         value={customTargetSalary}
                         onChange={(e) => updateCustomTargetSalary(e.target.value)}
                         className="text-sm"
@@ -438,7 +430,7 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
             </div>
             
             <div className="p-3 bg-muted/40 rounded-lg border text-xs text-muted-foreground">
-              Affordability uses the selected city estimate directly. No lifestyle multiplier is applied.
+              Enter both salaries to calculate affordability. No salary benchmark or lifestyle multiplier is used.
             </div>
           </div>
           
@@ -487,7 +479,9 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
                 ['visa', 'Visa & documents'],
+                ['languageMedical', 'Language & medical'],
                 ['travel', 'Travel & moving'],
+                ['temporaryStay', 'Temporary stay'],
                 ['deposit', 'Housing deposit'],
                 ['setup', 'Initial setup']
               ].map(([field, label]) => (
