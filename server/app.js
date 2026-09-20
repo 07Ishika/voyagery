@@ -64,6 +64,10 @@ function createApp() {
   // Passport strategies (side-effect import)
   require('./config/passport');
 
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+  });
+
   // REST mounts — URLs unchanged from previous monolith
   app.use('/auth', authRoutes);
   app.use('/api', profileRoutes);

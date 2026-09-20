@@ -24,6 +24,7 @@ import {
   Car,
   Zap
 } from 'lucide-react';
+import currencyService from '../services/currencyService';
 
 const MigrantAnalytics = ({ currentCity, targetCity }) => {
   // Create unique keys for city combination
@@ -39,6 +40,12 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
     return saved || '';
   });
   const [showSalaryInputs, setShowSalaryInputs] = useState(false);
+  const [oneTimeCosts, setOneTimeCosts] = useState({
+    visa: '',
+    travel: '',
+    deposit: '',
+    setup: ''
+  });
 
   // Save to localStorage whenever custom salaries change
   const updateCustomCurrentSalary = (value) => {
@@ -61,6 +68,10 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
     }
   };
 
+  const updateOneTimeCost = (field, value) => {
+    setOneTimeCosts((previous) => ({ ...previous, [field]: value }));
+  };
+
   // Load saved values when cities change
   useEffect(() => {
     const currentSaved = localStorage.getItem(`${storageKey}_current`);
@@ -80,35 +91,34 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
       setCustomTargetSalary('');
     }
   }, [storageKey]);
-  // Calculate actual costs from the selected cities
-  const currentCosts = currentCity ? {
-    housing: currentCity.rent?.oneBedroom || 0,
-    food: (currentCity.food?.groceries || 0) + (currentCity.food?.restaurant || 0),
-    transport: currentCity.transport?.public || 0,
-    utilities: (currentCity.utilities?.electricity || 0) + (currentCity.utilities?.water || 0) + 
-               (currentCity.utilities?.internet || 0) + (currentCity.utilities?.phone || 0),
-    total: 0
-  } : null;
+  // Use the same city snapshot shown on the Cost of Living page.
+  const buildCosts = (city) => {
+    if (!city) return null;
 
-  const targetCosts = targetCity ? {
-    housing: targetCity.rent?.oneBedroom || 0,
-    food: (targetCity.food?.groceries || 0) + (targetCity.food?.restaurant || 0),
-    transport: targetCity.transport?.public || 0,
-    utilities: (targetCity.utilities?.electricity || 0) + (targetCity.utilities?.water || 0) + 
-               (targetCity.utilities?.internet || 0) + (targetCity.utilities?.phone || 0),
-    total: 0
-  } : null;
+    const housing = city.rent?.oneBedroom || 0;
+    const currency = city.currency || 'USD';
+    const hasSnapshotTotal = city.monthlyExcludingRent !== undefined;
+    const food = (city.food?.groceries || 0) + (city.food?.restaurant || 0);
+    const transport = city.transport?.public || 0;
+    const utilities = (city.utilities?.electricity || 0) + (city.utilities?.water || 0) +
+      (city.utilities?.internet || 0) + (city.utilities?.phone || 0);
 
-  // Calculate totals
-  if (currentCosts) {
-    currentCosts.total = currentCosts.housing + currentCosts.food + currentCosts.transport + currentCosts.utilities;
-  }
-  if (targetCosts) {
-    targetCosts.total = targetCosts.housing + targetCosts.food + targetCosts.transport + targetCosts.utilities;
-  }
+    return {
+      housing,
+      food,
+      transport,
+      utilities,
+      currency,
+      total: hasSnapshotTotal
+        ? city.monthlyExcludingRent + housing
+        : housing + food + transport + utilities
+    };
+  };
 
-  // Salary estimates based on research (2024 data)
-  // Sources: Glassdoor, PayScale, Numbeo, government statistics
+  const currentCosts = buildCosts(currentCity);
+  const targetCosts = buildCosts(targetCity);
+
+  // Curated salary benchmarks are separate from Numbeo living-cost snapshots.
   const salaryData = {
     'Mumbai': { avg: 800000, min: 400000, max: 1500000, currency: 'INR' }, // IT/Finance avg
     'Delhi': { avg: 750000, min: 350000, max: 1400000, currency: 'INR' },
@@ -129,7 +139,7 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
   const targetMonthlySalary = customTargetSalary ? 
     parseFloat(customTargetSalary) : targetSalaryInfo.avg / 12;
 
-  // Salary vs Budget Reality Check (using realistic salary data)
+  // Compare each salary directly with the corresponding Numbeo estimate.
   const salaryBudgetData = currentCosts && targetCosts ? [
     {
       level: `Current\n${currentCity.name}`,
@@ -140,63 +150,29 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
       currency: currentCity.currency
     },
     {
-      level: `${targetCity.name}\nConservative`,
-      monthlySalary: Math.round(targetMonthlySalary),
-      livingCosts: Math.round(targetCosts.total * 0.8),
-      savings: Math.round(targetMonthlySalary - (targetCosts.total * 0.8)),
-      canAfford: targetMonthlySalary > (targetCosts.total * 0.8),
-      currency: targetCity.currency
-    },
-    {
-      level: `${targetCity.name}\nRealistic`,
+      level: `Target\n${targetCity.name}`,
       monthlySalary: Math.round(targetMonthlySalary),
       livingCosts: Math.round(targetCosts.total),
       savings: Math.round(targetMonthlySalary - targetCosts.total),
-      canAfford: targetMonthlySalary > targetCosts.total,
-      currency: targetCity.currency
-    },
-    {
-      level: `${targetCity.name}\nPremium`,
-      monthlySalary: Math.round(targetMonthlySalary),
-      livingCosts: Math.round(targetCosts.total * 1.3),
-      savings: Math.round(targetMonthlySalary - (targetCosts.total * 1.3)),
-      canAfford: targetMonthlySalary > (targetCosts.total * 1.3),
+      canAfford: targetMonthlySalary >= targetCosts.total,
       currency: targetCity.currency
     }
   ] : [];
 
-  // Migration Budget Planning (based on target location)
-  const baseMigrationCost = targetCosts ? targetCosts.total * 0.5 : 2000; // Base cost as % of monthly living cost
-  
+  // One-time migration costs are user inputs; no destination cost is invented.
   const migrationBudgetData = [
-    { 
-      phase: 'Planning & Research', 
-      cost: Math.round(baseMigrationCost * 0.15), 
-      timeframe: 'Months 1-2',
-      items: ['Language tests', 'Document preparation', 'Research costs']
-    },
-    { 
-      phase: 'Visa & Documentation', 
-      cost: Math.round(baseMigrationCost * 0.35), 
-      timeframe: 'Months 2-4',
-      items: ['Visa fees', 'Medical exams', 'Legal assistance']
-    },
-    { 
-      phase: 'Travel & Moving', 
-      cost: Math.round(baseMigrationCost * 0.25), 
-      timeframe: 'Month 5-6',
-      items: ['Flight tickets', 'Shipping', 'Temporary accommodation']
-    },
-    { 
-      phase: 'Initial Setup', 
-      cost: Math.round(baseMigrationCost * 0.25), 
-      timeframe: 'First 3 months',
-      items: ['Security deposits', 'Furniture', 'Local registration']
-    }
+    { phase: 'Visa & documents', cost: Number(oneTimeCosts.visa) || 0, items: 'Visa fees, medical exams, document preparation' },
+    { phase: 'Travel & moving', cost: Number(oneTimeCosts.travel) || 0, items: 'Flights, shipping, temporary accommodation' },
+    { phase: 'Housing deposit', cost: Number(oneTimeCosts.deposit) || 0, items: 'Security deposit and initial rent' },
+    { phase: 'Initial setup', cost: Number(oneTimeCosts.setup) || 0, items: 'Furniture, registration, essential purchases' }
   ];
 
-  // Current vs Target Location Comparison (using actual data)
-  const locationComparisonData = currentCosts && targetCosts ? [
+  const hasComparableCategories = currentCosts && targetCosts &&
+    currentCity.monthlyExcludingRent === undefined && targetCity.monthlyExcludingRent === undefined &&
+    currentCosts.currency === targetCosts.currency;
+
+  // Category comparison is shown only when both city records provide the same currency basis.
+  const locationComparisonData = hasComparableCategories ? [
     { 
       category: 'Housing', 
       current: currentCosts.housing, 
@@ -254,9 +230,14 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
   // Calculate summary stats
   const totalCurrentCost = currentCosts?.total || 0;
   const totalTargetCost = targetCosts?.total || 0;
-  const averageIncrease = totalCurrentCost > 0 ? Math.round(((totalTargetCost - totalCurrentCost) / totalCurrentCost) * 100) : 0;
-  const extraMonthlyCost = Math.abs(totalTargetCost - totalCurrentCost);
-  const costMultiplier = totalCurrentCost > 0 ? (totalTargetCost / totalCurrentCost).toFixed(1) : '0';
+  const totalCurrentInTargetCurrency = currentCosts && targetCosts
+    ? currencyService.convert(totalCurrentCost, currentCosts.currency, targetCosts.currency)
+    : 0;
+  const normalizedAverageIncrease = totalCurrentInTargetCurrency > 0
+    ? Math.round(((totalTargetCost - totalCurrentInTargetCurrency) / totalCurrentInTargetCurrency) * 100)
+    : 0;
+  const extraMonthlyCost = Math.abs(totalTargetCost - totalCurrentInTargetCurrency);
+  const costMultiplier = totalCurrentInTargetCurrency > 0 ? (totalTargetCost / totalCurrentInTargetCurrency).toFixed(1) : '0';
 
 
 
@@ -293,7 +274,7 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                 Financial Readiness Score
               </div>
               <div className="text-lg text-muted-foreground mb-4">
-                {salaryBudgetData.filter(s => s.canAfford).length}/4 scenarios are financially viable
+                {salaryBudgetData.filter(s => s.canAfford).length}/{salaryBudgetData.length} city comparisons are affordable
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {salaryBudgetData.map((scenario, index) => (
@@ -326,9 +307,9 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
               📊 Data Source Analysis
             </div>
             <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-              <div>• <strong>Current City:</strong> {currentCity?.name || 'Not selected'} - Monthly costs: ${Math.round(currentCosts?.total || 0)}</div>
-              <div>• <strong>Target City:</strong> {targetCity?.name || 'Not selected'} - Monthly costs: ${Math.round(targetCosts?.total || 0)}</div>
-              <div>• <strong>Breakdown:</strong> Housing + Food + Transport + Utilities from city database</div>
+              <div>• <strong>Current City:</strong> {currentCity?.name || 'Not selected'} - Monthly costs: {currentCosts ? `${currentCosts.currency} ${Math.round(currentCosts.total).toLocaleString()}` : 'Not available'}</div>
+              <div>• <strong>Target City:</strong> {targetCity?.name || 'Not selected'} - Monthly costs: {targetCosts ? `${targetCosts.currency} ${Math.round(targetCosts.total).toLocaleString()}` : 'Not available'}</div>
+              <div>• <strong>Cost source:</strong> Numbeo single-person estimate excluding rent + one-bedroom rent outside the city centre</div>
               {(!currentCity || !targetCity) && (
                 <div className="text-red-600 dark:text-red-400 font-medium">
                   ⚠️ Please select both cities in the Cost Calculator above to see accurate analysis
@@ -421,7 +402,8 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                     `Using estimate of ${targetSalaryInfo.currency} ${targetSalaryInfo.avg.toLocaleString()}/year (Monthly: ${Math.round(targetSalaryInfo.avg/12).toLocaleString()})`}
                   </div>
                   <div>• <strong>Storage Key:</strong> {storageKey}</div>
-                  <div>• <strong>Sources:</strong> {customCurrentSalary || customTargetSalary ? 'Your custom inputs + ' : ''}Glassdoor, PayScale, Numbeo (2024 data)</div>
+                  <div>• <strong>Salary source:</strong> {customCurrentSalary || customTargetSalary ? 'Your custom inputs; otherwise ' : ''}curated salary benchmarks (separate from Numbeo cost data)</div>
+                  <div>• <strong>Formula:</strong> monthly salary − estimated monthly cost = monthly buffer</div>
                 </div>
 
                 {showSalaryInputs && (
@@ -455,19 +437,8 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-sm font-medium text-green-700 dark:text-green-300">💰 Conservative (80%)</div>
-                <div className="text-xs text-green-600 dark:text-green-400">Shared housing, cook at home, basic lifestyle</div>
-              </div>
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-sm font-medium text-blue-700 dark:text-blue-300">🏠 Realistic (100%)</div>
-                <div className="text-xs text-blue-600 dark:text-blue-400">1BR apartment, normal lifestyle, mix of cooking/eating out</div>
-              </div>
-              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <div className="text-sm font-medium text-orange-700 dark:text-orange-300">✨ Premium (130%)</div>
-                <div className="text-xs text-orange-600 dark:text-orange-400">Nice apartment, frequent dining, comfortable living</div>
-              </div>
+            <div className="p-3 bg-muted/40 rounded-lg border text-xs text-muted-foreground">
+              Affordability uses the selected city estimate directly. No lifestyle multiplier is applied.
             </div>
           </div>
           
@@ -507,12 +478,32 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
             <Clock className="h-5 w-5 text-blue-500" />
             Migration Budget Planning
           </CardTitle>
-          <CardDescription>
-            Total costs and timeline for your migration journey
+            <CardDescription>
+            Add your expected one-time costs. The app does not invent visa, travel, or setup amounts.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                ['visa', 'Visa & documents'],
+                ['travel', 'Travel & moving'],
+                ['deposit', 'Housing deposit'],
+                ['setup', 'Initial setup']
+              ].map(([field, label]) => (
+                <label key={field} className="text-xs text-muted-foreground">
+                  {label} ({targetCity?.currency || 'local currency'})
+                  <Input
+                    type="number"
+                    min="0"
+                    value={oneTimeCosts[field]}
+                    onChange={(event) => updateOneTimeCost(field, event.target.value)}
+                    placeholder="0"
+                    className="mt-1"
+                  />
+                </label>
+              ))}
+            </div>
             {migrationBudgetData.map((phase, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                 <div className="flex-1">
@@ -526,11 +517,11 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground ml-11">
-                    {phase.items.join(' • ')}
+                    {phase.items}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">${phase.cost}</div>
+                  <div className="text-2xl font-bold text-primary">{targetCity?.currency || 'USD'} {phase.cost.toLocaleString()}</div>
                 </div>
               </div>
             ))}
@@ -538,11 +529,11 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total Migration Budget:</span>
                 <span className="text-3xl font-bold text-primary">
-                  ${migrationBudgetData.reduce((sum, phase) => sum + phase.cost, 0).toLocaleString()}
+                  {targetCity?.currency || 'USD'} {migrationBudgetData.reduce((sum, phase) => sum + phase.cost, 0).toLocaleString()}
                 </span>
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                Spread over 6-9 months • Save ${Math.round(migrationBudgetData.reduce((sum, phase) => sum + phase.cost, 0) / 6)}/month
+                User-entered one-time total; no timeline or savings assumption is applied.
               </div>
             </div>
           </div>
@@ -557,11 +548,16 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
             Current vs Target Location
           </CardTitle>
           <CardDescription>
-            Key cost differences between Mumbai and Toronto
+            Key cost differences between {currentCity?.name} and {targetCity?.name}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {!hasComparableCategories && (
+              <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                Category percentages are hidden because the selected city snapshots do not share a compatible category dataset. The total comparison below converts the current city total into the target city currency.
+              </div>
+            )}
             {locationComparisonData.map((item, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
                 <div className="flex items-center gap-4">
@@ -595,8 +591,8 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
             <div className="pt-4 border-t">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <div className={`text-2xl font-bold ${averageIncrease >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {averageIncrease >= 0 ? '+' : ''}{averageIncrease}%
+                  <div className={`text-2xl font-bold ${normalizedAverageIncrease >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {normalizedAverageIncrease >= 0 ? '+' : ''}{normalizedAverageIncrease}%
                   </div>
                   <div className="text-sm text-red-700 dark:text-red-300">Average Change</div>
                 </div>

@@ -668,7 +668,7 @@ const CostOfLiving = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">1 Bedroom</span>
-                    <span className="font-medium">{formatAmount(currentCityData.rent.oneBedroom, currentCityData.breakdownCurrency || 'USD')}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.oneBedroom, currentCityData.monthlyExcludingRent !== undefined ? currentCityData.currency : currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">2 Bedroom</span>
