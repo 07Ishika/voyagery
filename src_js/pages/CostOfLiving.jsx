@@ -68,8 +68,8 @@ const CostOfLiving = () => {
     currencyService.initialize();
   }, []);
 
-  const formatAmount = (amount) => currencyService.formatCurrency(
-    currencyService.convert(amount, 'USD', currency),
+  const formatAmount = (amount, sourceCurrency = 'USD') => currencyService.formatCurrency(
+    currencyService.convert(amount, sourceCurrency, currency),
     currency
   );
   const formatChartAmount = (amount) => currencyService.formatCurrency(amount, currency);
@@ -141,7 +141,14 @@ const CostOfLiving = () => {
     canada: {
       toronto: {
         name: 'Toronto',
-        rent: { studio: 1800, oneBedroom: 2200, twoBedroom: 2800, threeBedroom: 3500 },
+        currency: 'CAD',
+        monthlyExcludingRent: 1457,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/Toronto',
+        lastUpdated: '2026-09-18',
+        contributors: 374,
+        entriesLast12Months: 2156,
+        rent: { studio: 1800, oneBedroom: 2030.14, twoBedroom: 2800, threeBedroom: 3500 },
         food: { groceries: 400, restaurant: 200, fastFood: 80 },
         transport: { public: 120, gas: 200, car: 500 },
         utilities: { electricity: 80, water: 40, internet: 60, phone: 50 },
@@ -149,7 +156,14 @@ const CostOfLiving = () => {
       },
       vancouver: {
         name: 'Vancouver',
-        rent: { studio: 2000, oneBedroom: 2400, twoBedroom: 3000, threeBedroom: 3800 },
+        currency: 'CAD',
+        monthlyExcludingRent: 1420,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/Vancouver',
+        lastUpdated: '2026-09-20',
+        contributors: 221,
+        entriesLast12Months: 1570,
+        rent: { studio: 2000, oneBedroom: 2155.77, twoBedroom: 3000, threeBedroom: 3800 },
         food: { groceries: 450, restaurant: 220, fastFood: 90 },
         transport: { public: 130, gas: 220, car: 550 },
         utilities: { electricity: 90, water: 45, internet: 65, phone: 55 },
@@ -159,7 +173,14 @@ const CostOfLiving = () => {
     usa: {
       newyork: {
         name: 'New York',
-        rent: { studio: 2500, oneBedroom: 3200, twoBedroom: 4200, threeBedroom: 5500 },
+        currency: 'USD',
+        monthlyExcludingRent: 1676.6,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/New-York',
+        lastUpdated: '2026-09-19',
+        contributors: 212,
+        entriesLast12Months: 1221,
+        rent: { studio: 2500, oneBedroom: 3033.33, twoBedroom: 4200, threeBedroom: 5500 },
         food: { groceries: 500, restaurant: 300, fastFood: 120 },
         transport: { public: 150, gas: 250, car: 600 },
         utilities: { electricity: 100, water: 50, internet: 70, phone: 60 },
@@ -167,7 +188,14 @@ const CostOfLiving = () => {
       },
       sanfrancisco: {
         name: 'San Francisco',
-        rent: { studio: 2800, oneBedroom: 3500, twoBedroom: 4500, threeBedroom: 6000 },
+        currency: 'USD',
+        monthlyExcludingRent: 1551.7,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/San-Francisco',
+        lastUpdated: '2026-09-20',
+        contributors: 158,
+        entriesLast12Months: 1017,
+        rent: { studio: 2800, oneBedroom: 2647.76, twoBedroom: 4500, threeBedroom: 6000 },
         food: { groceries: 550, restaurant: 350, fastFood: 140 },
         transport: { public: 160, gas: 280, car: 650 },
         utilities: { electricity: 110, water: 55, internet: 75, phone: 65 },
@@ -177,7 +205,14 @@ const CostOfLiving = () => {
     uk: {
       london: {
         name: 'London',
-        rent: { studio: 1800, oneBedroom: 2200, twoBedroom: 2800, threeBedroom: 3500 },
+        currency: 'GBP',
+        monthlyExcludingRent: 1061.4,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/London',
+        lastUpdated: '2026-09-19',
+        contributors: 435,
+        entriesLast12Months: 2153,
+        rent: { studio: 1800, oneBedroom: 1720, twoBedroom: 2800, threeBedroom: 3500 },
         food: { groceries: 350, restaurant: 250, fastFood: 100 },
         transport: { public: 140, gas: 300, car: 500 },
         utilities: { electricity: 90, water: 50, internet: 50, phone: 40 },
@@ -187,7 +222,14 @@ const CostOfLiving = () => {
     australia: {
       sydney: {
         name: 'Sydney',
-        rent: { studio: 1600, oneBedroom: 2000, twoBedroom: 2600, threeBedroom: 3200 },
+        currency: 'AUD',
+        monthlyExcludingRent: 1804.2,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/Sydney',
+        lastUpdated: '2026-09-20',
+        contributors: 187,
+        entriesLast12Months: 1488,
+        rent: { studio: 1600, oneBedroom: 2547.88, twoBedroom: 2600, threeBedroom: 3200 },
         food: { groceries: 400, restaurant: 200, fastFood: 80 },
         transport: { public: 120, gas: 180, car: 450 },
         utilities: { electricity: 100, water: 60, internet: 70, phone: 50 },
@@ -197,7 +239,14 @@ const CostOfLiving = () => {
     india: {
       mumbai: {
         name: 'Mumbai',
-        rent: { studio: 400, oneBedroom: 600, twoBedroom: 900, threeBedroom: 1200 },
+        currency: 'INR',
+        monthlyExcludingRent: 36867.90,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/Mumbai',
+        lastUpdated: '2026-09-15',
+        contributors: 240,
+        entriesLast12Months: 1981,
+        rent: { studio: 400, oneBedroom: 34478.26, twoBedroom: 900, threeBedroom: 1200 },
         food: { groceries: 150, restaurant: 80, fastFood: 30 },
         transport: { public: 20, gas: 60, car: 200 },
         utilities: { electricity: 30, water: 10, internet: 15, phone: 10 },
@@ -205,7 +254,14 @@ const CostOfLiving = () => {
       },
       delhi: {
         name: 'Delhi',
-        rent: { studio: 300, oneBedroom: 450, twoBedroom: 700, threeBedroom: 950 },
+        currency: 'INR',
+        monthlyExcludingRent: 33782,
+        source: 'Numbeo',
+        sourceUrl: 'https://www.numbeo.com/cost-of-living/in/Delhi',
+        lastUpdated: '2026-09-19',
+        contributors: 255,
+        entriesLast12Months: 2483,
+        rent: { studio: 300, oneBedroom: 14740, twoBedroom: 700, threeBedroom: 950 },
         food: { groceries: 120, restaurant: 60, fastFood: 25 },
         transport: { public: 15, gas: 50, car: 180 },
         utilities: { electricity: 25, water: 8, internet: 12, phone: 8 },
@@ -228,6 +284,9 @@ const CostOfLiving = () => {
 
   const calculateTotalMonthly = (cityData) => {
     if (!cityData) return 0;
+    if (cityData.monthlyExcludingRent !== undefined) {
+      return cityData.monthlyExcludingRent + cityData.rent.oneBedroom;
+    }
     const { rent, food, transport, utilities, other } = cityData;
     return rent.oneBedroom + food.groceries + food.restaurant + transport.public +
       utilities.electricity + utilities.water + utilities.internet + utilities.phone +
@@ -237,8 +296,10 @@ const CostOfLiving = () => {
   const currentCityData = getCityData(selectedCountry, selectedCity);
   const comparisonCityData = getCityData(comparisonCountry, comparisonCity);
 
-  const currentTotal = calculateTotalMonthly(currentCityData);
-  const comparisonTotal = calculateTotalMonthly(comparisonCityData);
+  const currentTotalBase = calculateTotalMonthly(currentCityData);
+  const comparisonTotalBase = calculateTotalMonthly(comparisonCityData);
+  const currentTotal = currencyService.convert(currentTotalBase, currentCityData?.currency || 'USD', currency);
+  const comparisonTotal = currencyService.convert(comparisonTotalBase, comparisonCityData?.currency || 'USD', currency);
   const difference = currentTotal - comparisonTotal;
   const percentageDiff = comparisonTotal > 0 ? ((difference / comparisonTotal) * 100) : 0;
 
@@ -246,7 +307,7 @@ const CostOfLiving = () => {
   const getAnalyticsData = () => {
     if (!currentCityData || !comparisonCityData) return null;
 
-    const displayValue = (amount) => currencyService.convert(amount, 'USD', currency);
+    const displayValue = (amount, sourceCurrency = 'USD') => currencyService.convert(amount, sourceCurrency, currency);
 
     // Calculate category totals
     const currentHousing = currentCityData.rent.oneBedroom;
@@ -265,23 +326,23 @@ const CostOfLiving = () => {
     const barData = [
       {
         category: 'Housing',
-        [currentCityData.name]: displayValue(currentHousing),
-        [comparisonCityData.name]: displayValue(comparisonHousing)
+        [currentCityData.name]: displayValue(currentHousing, currentCityData.breakdownCurrency || 'USD'),
+        [comparisonCityData.name]: displayValue(comparisonHousing, comparisonCityData.breakdownCurrency || 'USD')
       },
       {
         category: 'Food & Dining',
-        [currentCityData.name]: displayValue(currentFood),
-        [comparisonCityData.name]: displayValue(comparisonFood)
+        [currentCityData.name]: displayValue(currentFood, currentCityData.breakdownCurrency || 'USD'),
+        [comparisonCityData.name]: displayValue(comparisonFood, comparisonCityData.breakdownCurrency || 'USD')
       },
       {
         category: 'Transportation',
-        [currentCityData.name]: displayValue(currentTransport),
-        [comparisonCityData.name]: displayValue(comparisonTransport)
+        [currentCityData.name]: displayValue(currentTransport, currentCityData.breakdownCurrency || 'USD'),
+        [comparisonCityData.name]: displayValue(comparisonTransport, comparisonCityData.breakdownCurrency || 'USD')
       },
       {
         category: 'Utilities',
-        [currentCityData.name]: displayValue(currentUtilities),
-        [comparisonCityData.name]: displayValue(comparisonUtilities)
+        [currentCityData.name]: displayValue(currentUtilities, currentCityData.breakdownCurrency || 'USD'),
+        [comparisonCityData.name]: displayValue(comparisonUtilities, comparisonCityData.breakdownCurrency || 'USD')
       }
     ];
 
@@ -295,18 +356,18 @@ const CostOfLiving = () => {
 
     // Pie chart data for current city
     const currentPieData = [
-      { name: 'Housing', value: displayValue(currentHousing), color: colorPalette.housing },
-      { name: 'Food & Dining', value: displayValue(currentFood), color: colorPalette.food },
-      { name: 'Transportation', value: displayValue(currentTransport), color: colorPalette.transport },
-      { name: 'Utilities', value: displayValue(currentUtilities), color: colorPalette.utilities }
+      { name: 'Housing', value: displayValue(currentHousing, currentCityData.breakdownCurrency || 'USD'), color: colorPalette.housing },
+      { name: 'Food & Dining', value: displayValue(currentFood, currentCityData.breakdownCurrency || 'USD'), color: colorPalette.food },
+      { name: 'Transportation', value: displayValue(currentTransport, currentCityData.breakdownCurrency || 'USD'), color: colorPalette.transport },
+      { name: 'Utilities', value: displayValue(currentUtilities, currentCityData.breakdownCurrency || 'USD'), color: colorPalette.utilities }
     ];
 
     // Pie chart data for comparison city
     const comparisonPieData = [
-      { name: 'Housing', value: displayValue(comparisonHousing), color: colorPalette.housing },
-      { name: 'Food & Dining', value: displayValue(comparisonFood), color: colorPalette.food },
-      { name: 'Transportation', value: displayValue(comparisonTransport), color: colorPalette.transport },
-      { name: 'Utilities', value: displayValue(comparisonUtilities), color: colorPalette.utilities }
+      { name: 'Housing', value: displayValue(comparisonHousing, comparisonCityData.breakdownCurrency || 'USD'), color: colorPalette.housing },
+      { name: 'Food & Dining', value: displayValue(comparisonFood, comparisonCityData.breakdownCurrency || 'USD'), color: colorPalette.food },
+      { name: 'Transportation', value: displayValue(comparisonTransport, comparisonCityData.breakdownCurrency || 'USD'), color: colorPalette.transport },
+      { name: 'Utilities', value: displayValue(comparisonUtilities, comparisonCityData.breakdownCurrency || 'USD'), color: colorPalette.utilities }
     ];
 
     // Radar chart data (percentage differences)
@@ -467,7 +528,7 @@ const CostOfLiving = () => {
                 {currentCityData && (
                   <div className="pt-4">
                     <div className="text-2xl font-bold text-primary mb-2">
-                      {formatAmount(currentTotal)}/month
+                      {formatChartAmount(currentTotal)}/month
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Estimated monthly cost for a single person
@@ -522,7 +583,7 @@ const CostOfLiving = () => {
                 {comparisonCityData && (
                   <div className="pt-4">
                     <div className="text-2xl font-bold text-secondary mb-2">
-                      {formatAmount(comparisonTotal)}/month
+                      {formatChartAmount(comparisonTotal)}/month
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Estimated monthly cost for a single person
@@ -532,6 +593,27 @@ const CostOfLiving = () => {
               </CardContent>
             </Card>
           </div>
+
+          {(currentCityData?.source || comparisonCityData?.source) && (
+            <div className="-mt-8 mb-10 text-center text-sm text-muted-foreground">
+              {currentCityData?.source && (
+                <span>
+                  {currentCityData.name}: {currentCityData.source}, updated {currentCityData.lastUpdated}
+                  {' '}({currentCityData.contributors} contributors)
+                </span>
+              )}
+              {currentCityData?.source && comparisonCityData?.source && <span> · </span>}
+              {comparisonCityData?.source && (
+                <span>
+                  {comparisonCityData.name}: {comparisonCityData.source}, updated {comparisonCityData.lastUpdated}
+                  {' '}({comparisonCityData.contributors} contributors)
+                </span>
+              )}
+              <p className="mt-2 text-xs">
+                Headline estimate includes Numbeo single-person costs excluding rent plus a one-bedroom rent outside the city centre.
+              </p>
+            </div>
+          )}
 
           {/* Comparison Result */}
           {currentCityData && comparisonCityData && (
@@ -550,7 +632,7 @@ const CostOfLiving = () => {
                       <div className={`text-2xl font-bold flex items-center gap-1 ${difference > 0 ? 'text-red-500' : 'text-green-500'
                         }`}>
                         {difference > 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
-                        {formatAmount(Math.abs(difference))}
+                        {formatChartAmount(Math.abs(difference))}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {Math.abs(percentageDiff).toFixed(1)}% {difference > 0 ? 'more' : 'less'}
@@ -582,19 +664,19 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Studio</span>
-                    <span className="font-medium">{formatAmount(currentCityData.rent.studio)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.studio, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">1 Bedroom</span>
-                    <span className="font-medium">{formatAmount(currentCityData.rent.oneBedroom)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.oneBedroom, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">2 Bedroom</span>
-                    <span className="font-medium">{formatAmount(currentCityData.rent.twoBedroom)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.twoBedroom, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">3 Bedroom</span>
-                    <span className="font-medium">{formatAmount(currentCityData.rent.threeBedroom)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.rent.threeBedroom, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -610,15 +692,15 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Groceries</span>
-                    <span className="font-medium">{formatAmount(currentCityData.food.groceries)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.groceries, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Restaurant</span>
-                    <span className="font-medium">{formatAmount(currentCityData.food.restaurant)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.restaurant, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Fast Food</span>
-                    <span className="font-medium">{formatAmount(currentCityData.food.fastFood)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.food.fastFood, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -634,15 +716,15 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Public Transport</span>
-                    <span className="font-medium">{formatAmount(currentCityData.transport.public)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.public, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Gas</span>
-                    <span className="font-medium">{formatAmount(currentCityData.transport.gas)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.gas, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Car Payment</span>
-                    <span className="font-medium">{formatAmount(currentCityData.transport.car)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.transport.car, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -658,19 +740,19 @@ const CostOfLiving = () => {
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Electricity</span>
-                    <span className="font-medium">{formatAmount(currentCityData.utilities.electricity)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.electricity, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Water</span>
-                    <span className="font-medium">{formatAmount(currentCityData.utilities.water)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.water, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Internet</span>
-                    <span className="font-medium">{formatAmount(currentCityData.utilities.internet)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.internet, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Phone</span>
-                    <span className="font-medium">{formatAmount(currentCityData.utilities.phone)}</span>
+                    <span className="font-medium">{formatAmount(currentCityData.utilities.phone, currentCityData.breakdownCurrency || 'USD')}</span>
                   </div>
                 </CardContent>
               </Card>
