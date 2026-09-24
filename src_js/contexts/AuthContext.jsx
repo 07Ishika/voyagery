@@ -1,6 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 const AuthContext = createContext();
+const AUTH_BASE = import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000';
+const AUTH_TIMEOUT_MS = 4000;
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -10,135 +12,117 @@ export const useAuth = () => {
   return context;
 };
 
+const getOrCreateTabId = () => {
+  let currentTabId = sessionStorage.getItem('tabId');
+  if (!currentTabId) {
+    currentTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('tabId', currentTabId);
+  }
+  return currentTabId;
+};
+
 export const AuthProvider = ({ children }) => {
+  const [tabId] = useState(getOrCreateTabId);
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [tabId, setTabId] = useState(null);
+  const [loading, setLoading] = useState(() => window.location.pathname !== '/role');
+  const fetchAbortRef = useRef(null);
 
-  // Generate or get tab ID
-  const getTabId = () => {
-    let currentTabId = sessionStorage.getItem('tabId');
-    if (!currentTabId) {
-      currentTabId = `tab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('tabId', currentTabId);
-    }
-    return currentTabId;
-  };
-
-  // Load tab-specific user
-  const loadTabUser = () => {
-    if (!tabId) return null;
-    
+  const loadTabUser = useCallback(() => {
     const storedUser = localStorage.getItem(`tabUser_${tabId}`);
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem(`tabUser_${tabId}`);
-      }
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+      localStorage.removeItem(`tabUser_${tabId}`);
+      return null;
     }
-    return null;
-  };
+  }, [tabId]);
 
-  // Save tab-specific user
-  const saveTabUser = (user) => {
-    if (!tabId) return;
-    
+  const saveTabUser = useCallback((user) => {
     if (user) {
       localStorage.setItem(`tabUser_${tabId}`, JSON.stringify(user));
     } else {
       localStorage.removeItem(`tabUser_${tabId}`);
     }
-  };
+  }, [tabId]);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async ({ skipNetwork = false } = {}) => {
+    if (fetchAbortRef.current) {
+      fetchAbortRef.current.abort();
+    }
+
+    if (window.location.pathname === '/role' || skipNetwork) {
+      setCurrentUser(null);
+      setLoading(false);
+      return;
+    }
+
+    const tabUser = loadTabUser();
+    if (tabUser) {
+      setCurrentUser(tabUser);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+
     try {
-      // Don't auto-load user if we're on role selection page (after logout)
-      if (window.location.pathname === '/role') {
-        console.log('🔍 AuthContext: On role page, not auto-loading user');
-        setCurrentUser(null);
-        setLoading(false);
-        return;
-      }
-
-      // First check if there's a tab-specific user
-      const tabUser = loadTabUser();
-      if (tabUser) {
-        console.log('🔍 AuthContext: Loaded tab user:', tabUser?.displayName, 'Role:', tabUser?.role);
-        setCurrentUser(tabUser);
-        setLoading(false);
-        return;
-      }
-
-      // If no tab user, check server session
-      const response = await fetch(`${import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:5000'}/auth/user`, {
-        credentials: 'include'
+      const response = await fetch(`${AUTH_BASE}/auth/user`, {
+        credentials: 'include',
+        signal: controller.signal,
       });
-      
+
       if (response.ok) {
         const user = await response.json();
-        console.log('🔍 AuthContext: Fetched server user:', user?.displayName, 'Role:', user?.role);
         setCurrentUser(user);
-        saveTabUser(user); // Save to tab storage
+        saveTabUser(user);
       } else {
-        console.log('🔍 AuthContext: No authenticated user');
         setCurrentUser(null);
       }
     } catch (error) {
-      console.error('❌ AuthContext: Error fetching user:', error);
+      if (error.name !== 'AbortError') {
+        console.error('AuthContext: Error fetching user:', error);
+      }
       setCurrentUser(null);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
-  };
+  }, [loadTabUser, saveTabUser]);
 
   const logout = async () => {
-    try {
-      console.log('🔍 AuthContext: Logging out tab:', tabId);
-      // Clear current user state
-      setCurrentUser(null);
-      // Clear tab-specific storage
-      saveTabUser(null);
-      // Also clear any cached data
-      if (tabId) {
-        localStorage.removeItem(`tabUser_${tabId}`);
-        console.log('🔍 AuthContext: Cleared tab storage for:', tabId);
-      }
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+    setCurrentUser(null);
+    saveTabUser(null);
+    localStorage.removeItem(`tabUser_${tabId}`);
   };
 
   const refreshUser = async () => {
-    setLoading(true);
+    setLoading(window.location.pathname !== '/role');
     await fetchUser();
   };
 
   const clearTabSession = () => {
-    console.log('🔍 AuthContext: Clearing complete tab session');
     setCurrentUser(null);
-    if (tabId) {
-      localStorage.removeItem(`tabUser_${tabId}`);
-    }
+    localStorage.removeItem(`tabUser_${tabId}`);
   };
 
   const setUser = (user) => {
-    console.log('🔍 AuthContext: Setting tab user:', user?.displayName, 'Role:', user?.role, 'Tab:', tabId);
     setCurrentUser(user);
     saveTabUser(user);
+    setLoading(false);
   };
 
   useEffect(() => {
-    const currentTabId = getTabId();
-    setTabId(currentTabId);
-  }, []);
-
-  useEffect(() => {
-    if (tabId) {
-      fetchUser();
-    }
-  }, [tabId]);
+    fetchUser();
+    return () => {
+      if (fetchAbortRef.current) {
+        fetchAbortRef.current.abort();
+      }
+    };
+  }, [fetchUser]);
 
   const value = {
     currentUser,

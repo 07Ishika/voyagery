@@ -85,7 +85,8 @@ const RoleSelection = () => {
     }
   };
 
-  if (loading) {
+  // Public page: show role picker immediately. Only spin if a known user is about to redirect.
+  if (loading && currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
