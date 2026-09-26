@@ -34,6 +34,16 @@ const costData = {
             transport: { public: 150, gas: 250, car: 600 },
             utilities: { electricity: 100, water: 50, internet: 70, phone: 60 },
             other: { healthcare: 200, entertainment: 200, clothing: 150, fitness: 80 }
+        },
+        sanfrancisco: {
+            name: 'San Francisco',
+            country: 'United States',
+            currency: 'USD',
+            rent: { studio: 2800, oneBedroom: 2647, twoBedroom: 4500, threeBedroom: 6000 },
+            food: { groceries: 550, restaurant: 350, fastFood: 140 },
+            transport: { public: 160, gas: 280, car: 650 },
+            utilities: { electricity: 110, water: 55, internet: 75, phone: 65 },
+            other: { healthcare: 220, entertainment: 220, clothing: 160, fitness: 90 }
         }
     },
     uk: {
@@ -48,16 +58,38 @@ const costData = {
             other: { healthcare: 0, entertainment: 180, clothing: 120, fitness: 70 }
         }
     },
+    australia: {
+        sydney: {
+            name: 'Sydney',
+            country: 'Australia',
+            currency: 'AUD',
+            rent: { studio: 1600, oneBedroom: 2547, twoBedroom: 2600, threeBedroom: 3200 },
+            food: { groceries: 400, restaurant: 200, fastFood: 80 },
+            transport: { public: 120, gas: 180, car: 450 },
+            utilities: { electricity: 100, water: 60, internet: 70, phone: 50 },
+            other: { healthcare: 0, entertainment: 150, clothing: 100, fitness: 60 }
+        }
+    },
     india: {
         mumbai: {
             name: 'Mumbai',
             country: 'India',
             currency: 'INR',
-            rent: { studio: 25000, oneBedroom: 35000, twoBedroom: 55000, threeBedroom: 75000 },
+            rent: { studio: 25000, oneBedroom: 34478, twoBedroom: 55000, threeBedroom: 75000 },
             food: { groceries: 8000, restaurant: 4000, fastFood: 1500 },
             transport: { public: 1200, gas: 3500, car: 12000 },
             utilities: { electricity: 2000, water: 600, internet: 800, phone: 500 },
             other: { healthcare: 1500, entertainment: 3000, clothing: 2000, fitness: 1500 }
+        },
+        delhi: {
+            name: 'Delhi',
+            country: 'India',
+            currency: 'INR',
+            rent: { studio: 15000, oneBedroom: 14740, twoBedroom: 30000, threeBedroom: 45000 },
+            food: { groceries: 6000, restaurant: 3000, fastFood: 1200 },
+            transport: { public: 1000, gas: 3000, car: 10000 },
+            utilities: { electricity: 1800, water: 500, internet: 700, phone: 400 },
+            other: { healthcare: 1200, entertainment: 2500, clothing: 1800, fitness: 1200 }
         }
     }
 };
