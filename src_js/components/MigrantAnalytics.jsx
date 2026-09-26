@@ -22,7 +22,17 @@ import {
   Home,
   Utensils,
   Car,
-  Zap
+  Zap,
+  Calculator,
+  FileText,
+  Stethoscope,
+  Plane,
+  Building,
+  Key,
+  Package,
+  RotateCcw,
+  Sparkles,
+  Info
 } from 'lucide-react';
 import currencyService from '../services/currencyService';
 
@@ -463,74 +473,224 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
         </CardContent>
       </Card>
 
-      {/* 2. Migration Budget Planning */}
-      <Card className="bg-card/60 backdrop-blur-sm border-border">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-blue-500" />
-            Migration Budget Planning
-          </CardTitle>
-            <CardDescription>
-            Add your expected one-time costs. The app does not invent visa, travel, or setup amounts.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                ['visa', 'Visa & documents'],
-                ['languageMedical', 'Language & medical'],
-                ['travel', 'Travel & moving'],
-                ['temporaryStay', 'Temporary stay'],
-                ['deposit', 'Housing deposit'],
-                ['setup', 'Initial setup']
-              ].map(([field, label]) => (
-                <label key={field} className="text-xs text-muted-foreground">
-                  {label} ({targetCity?.currency || 'local currency'})
-                  <Input
-                    type="number"
-                    min="0"
-                    value={oneTimeCosts[field]}
-                    onChange={(event) => updateOneTimeCost(field, event.target.value)}
-                    placeholder="0"
-                    className="mt-1"
-                  />
-                </label>
-              ))}
+      {/* 2. Migration Budget Calculator */}
+      <Card className="bg-card/70 backdrop-blur-md border-border shadow-xl overflow-hidden">
+        <CardHeader className="pb-4 border-b border-border/50 bg-muted/20">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                <Calculator className="h-6 w-6 text-primary" />
+                One-Time Migration Cost Calculator
+              </CardTitle>
+              <CardDescription className="mt-1 text-sm">
+                Estimate your upfront, non-recurring relocation expenses. Enter custom estimates below or pick a preset.
+              </CardDescription>
             </div>
-            {migrationBudgetData.map((phase, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                      {index + 1}
-                    </div>
-                    <div>
-                      <div className="font-medium">{phase.phase}</div>
-                      <div className="text-sm text-muted-foreground">{phase.timeframe}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground ml-11">
-                    {phase.items}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-primary">{targetCity?.currency || 'USD'} {phase.cost.toLocaleString()}</div>
-                </div>
-              </div>
-            ))}
-            <div className="pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold">Total Migration Budget:</span>
-                <span className="text-3xl font-bold text-primary">
-                  {targetCity?.currency || 'USD'} {migrationBudgetData.reduce((sum, phase) => sum + phase.cost, 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                User-entered one-time total; no timeline or savings assumption is applied.
-              </div>
+            {/* Quick Presets */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium mr-1">Quick Presets:</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8 bg-background/50 hover:bg-primary/10 border-primary/20"
+                onClick={() => setOneTimeCosts({
+                  visa: '15000',
+                  languageMedical: '10000',
+                  travel: '25000',
+                  temporaryStay: '20000',
+                  deposit: '30000',
+                  setup: '15000'
+                })}
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-500" />
+                Student Move
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8 bg-background/50 hover:bg-primary/10 border-primary/20"
+                onClick={() => setOneTimeCosts({
+                  visa: '35000',
+                  languageMedical: '20000',
+                  travel: '60000',
+                  temporaryStay: '50000',
+                  deposit: '80000',
+                  setup: '45000'
+                })}
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1 text-primary" />
+                Work Visa Move
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setOneTimeCosts({
+                  visa: '',
+                  languageMedical: '',
+                  travel: '',
+                  temporaryStay: '',
+                  deposit: '',
+                  setup: ''
+                })}
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                Reset
+              </Button>
             </div>
           </div>
+        </CardHeader>
+
+        <CardContent className="pt-6 space-y-6">
+          {/* Interactive Calculator Category Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                field: 'visa',
+                label: 'Visa & Documents',
+                items: 'Visa fees, document translation & legal assistance',
+                icon: FileText,
+                color: 'text-indigo-400',
+                bg: 'bg-indigo-500/10 border-indigo-500/20'
+              },
+              {
+                field: 'languageMedical',
+                label: 'Language & Medical',
+                items: 'IELTS/PTE exams, medical checks & police clearance',
+                icon: Stethoscope,
+                color: 'text-rose-400',
+                bg: 'bg-rose-500/10 border-rose-500/20'
+              },
+              {
+                field: 'travel',
+                label: 'Travel & Moving',
+                items: 'Flight tickets, extra baggage & shipping costs',
+                icon: Plane,
+                color: 'text-sky-400',
+                bg: 'bg-sky-500/10 border-sky-500/20'
+              },
+              {
+                field: 'temporaryStay',
+                label: 'Temporary Accommodation',
+                items: 'Airbnb/Hotel stay for first 1-3 weeks',
+                icon: Building,
+                color: 'text-amber-400',
+                bg: 'bg-amber-500/10 border-amber-500/20'
+              },
+              {
+                field: 'deposit',
+                label: 'Housing Security Deposit',
+                items: 'Initial bond / advance rent payment',
+                icon: Key,
+                color: 'text-emerald-400',
+                bg: 'bg-emerald-500/10 border-emerald-500/20'
+              },
+              {
+                field: 'setup',
+                label: 'Initial Household Setup',
+                items: 'Essentials, furniture, SIM card & registration',
+                icon: Package,
+                color: 'text-purple-400',
+                bg: 'bg-purple-500/10 border-purple-500/20'
+              }
+            ].map(({ field, label, items, icon: IconComponent, color, bg }) => {
+              const currSymbol = targetCity?.currency === 'USD' ? '$' : targetCity?.currency || 'INR';
+
+              return (
+                <div
+                  key={field}
+                  className="group p-4 rounded-xl bg-card border border-border/80 hover:border-primary/40 transition-all duration-200 shadow-sm hover:shadow-md space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-2 rounded-lg ${bg} border`}>
+                        <IconComponent className={`h-5 w-5 ${color}`} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm leading-tight text-foreground">{label}</h4>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{items}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Calculator Input Field */}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                      {currSymbol === 'INR' ? '₹' : currSymbol}
+                    </span>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={oneTimeCosts[field]}
+                      onChange={(event) => updateOneTimeCost(field, event.target.value)}
+                      placeholder="0"
+                      className="pl-8 pr-3 text-right font-mono font-bold text-base h-10 bg-background/80 border-border/60 focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Calculator Live Total Header */}
+          {(() => {
+            const total = migrationBudgetData.reduce((sum, phase) => sum + phase.cost, 0);
+            const currSymbol = targetCity?.currency === 'USD' ? '$' : targetCity?.currency || 'INR';
+            const displaySymbol = currSymbol === 'INR' ? '₹' : currSymbol;
+
+            return (
+              <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-purple-500/10 border border-primary/20 shadow-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="space-y-1 text-center sm:text-left">
+                    <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5">
+                      <Calculator className="h-4 w-4 text-primary" />
+                      Total Estimated One-Time Relocation Budget
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Sum of user-entered one-time setup expenses before monthly income kicks in.
+                    </p>
+                  </div>
+                  <div className="text-center sm:text-right">
+                    <div className="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight font-mono">
+                      {displaySymbol} {total.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress breakdown bar if total > 0 */}
+                {total > 0 && (
+                  <div className="mt-5 pt-4 border-t border-border/40">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5 font-medium">
+                      <span>Expense Distribution</span>
+                      <span>{migrationBudgetData.filter(p => p.cost > 0).length} Categories Configured</span>
+                    </div>
+                    <div className="h-3 w-full bg-muted/50 rounded-full overflow-hidden flex gap-0.5">
+                      {migrationBudgetData.map((item, idx) => {
+                        const pct = (item.cost / total) * 100;
+                        if (pct === 0) return null;
+                        const bgColors = [
+                          'bg-indigo-500',
+                          'bg-rose-500',
+                          'bg-sky-500',
+                          'bg-amber-500',
+                          'bg-emerald-500',
+                          'bg-purple-500'
+                        ];
+                        return (
+                          <div
+                            key={idx}
+                            style={{ width: `${pct}%` }}
+                            className={`${bgColors[idx % bgColors.length]} h-full transition-all duration-300`}
+                            title={`${item.phase}: ${displaySymbol}${item.cost.toLocaleString()} (${pct.toFixed(1)}%)`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
@@ -548,8 +708,9 @@ const MigrantAnalytics = ({ currentCity, targetCity }) => {
         <CardContent>
           <div className="space-y-4">
             {!hasComparableCategories && (
-              <div className="p-3 rounded-lg border border-blue-200 bg-blue-50 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-                Category percentages are hidden because the selected city snapshots do not share a compatible category dataset. The total comparison below converts the current city total into the target city currency.
+              <div className="p-3 rounded-lg border border-blue-500/20 bg-blue-500/10 text-xs text-blue-400 flex items-center gap-2">
+                <Info className="h-4 w-4 shrink-0 text-blue-400" />
+                <span>Comparing overall Numbeo living indices between {currentCity?.name} and {targetCity?.name} converted into target currency ({targetCity?.currency || 'INR'}).</span>
               </div>
             )}
             {locationComparisonData.map((item, index) => (

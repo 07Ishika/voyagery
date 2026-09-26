@@ -53,9 +53,7 @@ import MigrantAnalytics from '../components/MigrantAnalytics';
 import currencyService from '../services/currencyService';
 
 const CostOfLiving = () => {
-  const defaultCurrency = typeof navigator !== 'undefined' && navigator.language.toLowerCase().includes('-in')
-    ? 'INR'
-    : 'USD';
+  const defaultCurrency = 'INR';
   const [currency, setCurrency] = useState(defaultCurrency);
   const [selectedCountry, setSelectedCountry] = useState('canada');
   const [selectedCity, setSelectedCity] = useState('toronto');
@@ -300,8 +298,9 @@ const CostOfLiving = () => {
   const comparisonTotalBase = calculateTotalMonthly(comparisonCityData);
   const currentTotal = currencyService.convert(currentTotalBase, currentCityData?.currency || 'USD', currency);
   const comparisonTotal = currencyService.convert(comparisonTotalBase, comparisonCityData?.currency || 'USD', currency);
-  const difference = currentTotal - comparisonTotal;
-  const percentageDiff = comparisonTotal > 0 ? ((difference / comparisonTotal) * 100) : 0;
+  const costDiff = comparisonTotal - currentTotal;
+  const absDifference = Math.abs(costDiff);
+  const percentageDiff = currentTotal > 0 ? ((absDifference / currentTotal) * 100) : 0;
 
   // Analytics data preparation
   const getAnalyticsData = () => {
@@ -374,19 +373,19 @@ const CostOfLiving = () => {
     const radarData = [
       {
         category: 'Housing',
-        difference: comparisonHousing > 0 ? ((currentHousing - comparisonHousing) / comparisonHousing * 100) : 0
+        difference: currentHousing > 0 ? ((comparisonHousing - currentHousing) / currentHousing * 100) : 0
       },
       {
         category: 'Food & Dining',
-        difference: comparisonFood > 0 ? ((currentFood - comparisonFood) / comparisonFood * 100) : 0
+        difference: currentFood > 0 ? ((comparisonFood - currentFood) / currentFood * 100) : 0
       },
       {
         category: 'Transportation',
-        difference: comparisonTransport > 0 ? ((currentTransport - comparisonTransport) / comparisonTransport * 100) : 0
+        difference: currentTransport > 0 ? ((comparisonTransport - currentTransport) / currentTransport * 100) : 0
       },
       {
         category: 'Utilities',
-        difference: comparisonUtilities > 0 ? ((currentUtilities - comparisonUtilities) / comparisonUtilities * 100) : 0
+        difference: currentUtilities > 0 ? ((comparisonUtilities - currentUtilities) / currentUtilities * 100) : 0
       }
     ];
 
@@ -629,13 +628,18 @@ const CostOfLiving = () => {
                       <div className="text-sm text-muted-foreground">Current</div>
                     </div>
                     <div className="text-center">
-                      <div className={`text-2xl font-bold flex items-center gap-1 ${difference > 0 ? 'text-red-500' : 'text-green-500'
-                        }`}>
-                        {difference > 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
-                        {formatChartAmount(Math.abs(difference))}
+                      <div className={`text-2xl font-bold flex items-center justify-center gap-1 ${
+                        costDiff > 0 ? 'text-red-500' : costDiff < 0 ? 'text-green-500' : 'text-muted-foreground'
+                      }`}>
+                        {costDiff > 0 ? (
+                          <TrendingUp className="h-5 w-5" />
+                        ) : costDiff < 0 ? (
+                          <TrendingDown className="h-5 w-5" />
+                        ) : null}
+                        {formatChartAmount(absDifference)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {Math.abs(percentageDiff).toFixed(1)}% {difference > 0 ? 'more' : 'less'}
+                        {percentageDiff.toFixed(1)}% {costDiff > 0 ? 'more' : costDiff < 0 ? 'less' : 'difference'}
                       </div>
                     </div>
                     <div className="text-center">

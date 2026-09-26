@@ -121,8 +121,8 @@ const CostCalculatorWidget = () => {
     other: ''
   });
 
-  const [baseCurrency, setBaseCurrency] = useState('USD'); // Currency for input
-  const [displayCurrency, setDisplayCurrency] = useState('USD'); // Currency for display
+  const [baseCurrency, setBaseCurrency] = useState('INR'); // Currency for input
+  const [displayCurrency, setDisplayCurrency] = useState('INR'); // Currency for display
   const [isMinimized, setIsMinimized] = useState(false);
   const [showConversion, setShowConversion] = useState(false);
   const [showLocationComparison, setShowLocationComparison] = useState(false);
