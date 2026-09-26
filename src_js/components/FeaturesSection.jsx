@@ -64,7 +64,7 @@ export const FeaturesSection = () => {
     { icon: Globe, label: "Countries Covered", value: "50+", color: "text-primary" },
     { icon: Star, label: "Average Rating", value: "4.9/5", color: "text-accent" },
     { icon: Clock, label: "Response Time", value: "< 2 hrs", color: "text-secondary" },
-    { icon: TrendingUp, label: "Success Rate", value: "94%", color: "text-green-500" }
+    { icon: Video, label: "1:1 Support", value: "Available", color: "text-green-500" }
   ];
 
   return (

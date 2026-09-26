@@ -4,19 +4,18 @@ const userRepository = require('../repositories/userRepository');
 
 class PublicStatsService {
 	async getStats() {
-		const [guides, migrants, successStories, targetCountries] = await Promise.all([
-			profileRepository.countDocuments({ role: 'guide', verifiedStatus: 'verified' }),
+		const [guides, migrants, totalSessions, targetCountries] = await Promise.all([
+			profileRepository.countDocuments({ role: 'guide' }),
 			userRepository.countDocuments({ role: 'migrant' }),
-			sessionRepository.countDocuments({
-				$or: [{ status: 'completed' }, { requestStatus: 'completed' }]
-			}),
+			sessionRepository.countDocuments({}),
 			profileRepository.distinct('targetCountries', { role: 'guide' })
 		]);
 
 		return {
 			guides,
 			migrants,
-			successStories,
+			consultationsBooked: totalSessions,
+			successStories: totalSessions,
 			countries: targetCountries.filter(Boolean).length
 		};
 	}

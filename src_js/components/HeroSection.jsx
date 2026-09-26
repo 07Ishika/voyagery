@@ -66,8 +66,8 @@ export const HeroSection = () => {
                 <div className="text-sm text-muted-foreground">Countries</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-accent">{formatStat(stats?.successStories)}</div>
-                <div className="text-sm text-muted-foreground">Success Stories</div>
+                <div className="text-3xl font-bold text-accent">{formatStat(stats?.consultationsBooked ?? stats?.successStories)}</div>
+                <div className="text-sm text-muted-foreground">Consultations Booked</div>
               </div>
             </div>
           </div>

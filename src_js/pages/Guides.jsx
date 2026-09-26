@@ -78,8 +78,16 @@ const Guides = () => {
     }
   ];
 
-  // Use only real guides from database, with fallback to empty array
-  const displayGuides = guides || [];
+  // Use real guides from database, deduplicating any duplicate database entries
+  const rawGuides = guides || [];
+  const uniqueGuidesMap = new Map();
+  rawGuides.forEach(guide => {
+    const key = guide.email || guide.userId || guide._id || guide.fullName;
+    if (key && !uniqueGuidesMap.has(key)) {
+      uniqueGuidesMap.set(key, guide);
+    }
+  });
+  const displayGuides = Array.from(uniqueGuidesMap.values());
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("All");
@@ -210,9 +218,13 @@ const Guides = () => {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <Award className="w-8 h-8 text-accent mx-auto mb-2" />
-              <div className="text-2xl font-bold text-accent">94%</div>
-              <div className="text-sm text-muted-foreground">Success Rate</div>
+              <Video className="w-8 h-8 text-accent mx-auto mb-2" />
+              <div className="text-2xl font-bold text-accent">
+                {scheduledCalls.length > 0 ? scheduledCalls.length : (displayGuides || []).reduce((sum, g) => sum + (g.expertiseAreas?.length || 1), 0)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {scheduledCalls.length > 0 ? 'Sessions Scheduled' : 'Expert Domains'}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -244,8 +256,8 @@ const Guides = () => {
 
         {/* Guides Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGuides.map((guide) => (
-            <Card key={guide._id || guide.userId} className="hover:shadow-glow transition-all duration-300 group">
+          {filteredGuides.map((guide, idx) => (
+            <Card key={guide._id || guide.userId || `guide-${idx}`} className="hover:shadow-glow transition-all duration-300 group">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
