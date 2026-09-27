@@ -64,8 +64,8 @@ const Cover = () => {
                 <div className="text-sm text-muted-foreground">Countries</div>
               </div>
               <div className="bg-card/60 border border-border rounded-xl p-5">
-                <div className="text-2xl font-bold text-accent">{formatStat(stats?.successStories)}</div>
-                <div className="text-sm text-muted-foreground">Success Stories</div>
+                <div className="text-2xl font-bold text-accent">{formatStat(stats?.consultationsBooked ?? stats?.successStories)}</div>
+                <div className="text-sm text-muted-foreground">Consultations Booked</div>
               </div>
             </div>
           </div>
